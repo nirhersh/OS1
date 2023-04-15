@@ -2,15 +2,18 @@
 #define SMASH_COMMAND_H_
 
 #include <vector>
+#include <string>
+
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
 
 class Command {
-// TODO: Add your data members
- public:
+  // TODO: add fields 
+
+public:
   Command(const char* cmd_line);
-  virtual ~Command();
+  virtual ~Command() {}
   virtual void execute() = 0;
   //virtual void prepare();
   //virtual void cleanup();
@@ -50,6 +53,10 @@ class RedirectionCommand : public Command {
 
 class ChangeDirCommand : public BuiltInCommand {
 // TODO: Add your data members public:
+public:
+  char* m_cmdLine;
+  std::string m_newDear;
+  std::string m_lastDir;
   ChangeDirCommand(const char* cmd_line, char** plastPwd);
   virtual ~ChangeDirCommand() {}
   void execute() override;
@@ -66,6 +73,14 @@ class ShowPidCommand : public BuiltInCommand {
  public:
   ShowPidCommand(const char* cmd_line);
   virtual ~ShowPidCommand() {}
+  void execute() override;
+};
+
+class ChpromptCommand : public BuiltInCommand {
+ public:
+  char* m_cmdLine;
+  ChpromptCommand(const char* cmd_line);
+  virtual ~ChpromptCommand() {}
   void execute() override;
 };
 
@@ -167,6 +182,8 @@ class KillCommand : public BuiltInCommand {
 class SmallShell {
  private:
   // TODO: Add your data members
+  std::string m_shellPrompt;
+  std::string m_lastDir;
   SmallShell();
  public:
   Command *CreateCommand(const char* cmd_line);
@@ -181,6 +198,14 @@ class SmallShell {
   ~SmallShell();
   void executeCommand(const char* cmd_line);
   // TODO: add extra methods as needed
+
+  
+  std::string get_lastDir();
+  std::string get_shellPrompt();
+
+  
+  void set_lastDir(const std::string newDir);
+  void set_shellPrompt(const std::string newDir);
 };
 
 #endif //SMASH_COMMAND_H_
