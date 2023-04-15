@@ -12,7 +12,7 @@
 using namespace std;
 #define MAX_LINE_LEN 80
 #define SYSCALL_FAILED -1
-#define DEFAULT_SHELL_PROMPT "smash> "
+#define DEFAULT_SHELL_PROMPT "smash"
 #define FIRST_ARGUMENT 1
 
 const std::string WHITESPACE = " \n\r\t\f\v";
@@ -91,7 +91,7 @@ void _removeBackgroundSign(char* cmd_line) {
 SmallShell::SmallShell() {
 // TODO: add your implementation
   set_lastDir("");
-  m_shellPrompt = "smash> ";
+  m_shellPrompt = "smash";
 }
 
 SmallShell::~SmallShell() {
@@ -195,7 +195,8 @@ ChangeDirCommand::ChangeDirCommand(const char* cmd_line, char** plastPwd): Built
 
 void ChangeDirCommand::execute()
 {
-  char** args;
+  char* args[MAX_LINE_LEN];
+  args[0] = (char*)malloc(13);
   int argsNum = _parseCommandLine(m_cmdLine, args);
   if (argsNum > 2){
     std::cout << "smash error: cd: too many agruments" << std::endl;
@@ -237,15 +238,14 @@ ChpromptCommand::ChpromptCommand(const char* cmd_line):  BuiltInCommand(cmd_line
 
 void ChpromptCommand::execute()
 {
-  char** example1;
-  int argsNum = _parseCommandLine(m_cmdLine, example1);
-  std::cout << "1111111111" << std::endl;
+  char* args[MAX_LINE_LEN];
+  int argsNum = _parseCommandLine(m_cmdLine, args);
   SmallShell& shell = SmallShell::getInstance();
   if(argsNum == 1)
   {
     shell.set_shellPrompt(DEFAULT_SHELL_PROMPT);
   } else {
-    shell.set_shellPrompt(example1[FIRST_ARGUMENT]);
+    shell.set_shellPrompt(args[FIRST_ARGUMENT]);
   }
 }
 
