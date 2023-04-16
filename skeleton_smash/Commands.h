@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <time.h>
 
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
@@ -97,8 +98,17 @@ public:
 class JobsList {
  public:
   class JobEntry {
-   // TODO: Add your data members
+  protected:
+    int m_jobId;
+    time_t m_entryTime;
+    Command* m_command;
+    std::string m_commandName;
+    bool m_isStopped;
+  public:
+    JobEntry(int jobId, time_t entryTime, Command* command, std::string commandName, bool isStopped = false) :
+    m_jobId(jobId), m_entryTime(entryTime), m_command(command), m_commandName(commandName), m_isStopped(isStopped){}
   };
+  std::vector<JobEntry> m_jobsList;
  // TODO: Add your data members
  public:
   JobsList();
@@ -115,7 +125,8 @@ class JobsList {
 };
 
 class JobsCommand : public BuiltInCommand {
- // TODO: Add your data members
+ char* m_cmdLine;
+ JobsList* m_jobs;
  public:
   JobsCommand(const char* cmd_line, JobsList* jobs);
   virtual ~JobsCommand() {}
@@ -185,6 +196,7 @@ class SmallShell {
   std::string m_shellPrompt;
   std::string m_lastDir;
   SmallShell();
+  JobsList* m_jobsList;
  public:
   Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
@@ -198,13 +210,15 @@ class SmallShell {
   ~SmallShell();
   void executeCommand(const char* cmd_line);
   // TODO: add extra methods as needed
-
   
   std::string get_lastDir();
+
   std::string get_shellPrompt();
 
-  
+  JobsList* get_jobsList();
+
   void set_lastDir(const std::string newDir);
+
   void set_shellPrompt(const std::string newDir);
 };
 

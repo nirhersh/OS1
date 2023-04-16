@@ -14,6 +14,7 @@ using namespace std;
 #define SYSCALL_FAILED -1
 #define DEFAULT_SHELL_PROMPT "smash"
 #define FIRST_ARGUMENT 1
+#define MAX_ARGS 20
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
@@ -92,6 +93,7 @@ SmallShell::SmallShell() {
 // TODO: add your implementation
   set_lastDir("");
   m_shellPrompt = "smash";
+  m_jobsList = new JobsList();
 }
 
 SmallShell::~SmallShell() {
@@ -119,6 +121,9 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   else if (firstWord.compare("chprompt") == 0) {
     return new ChpromptCommand(cmd_line);
   }
+  else if (firstWord.compare("jobs") == 0){
+    return new JobsCommand(cmd_line, this->get_jobsList());
+  }
   //add ifs for every command
   return nullptr;
 }
@@ -140,6 +145,11 @@ std::string SmallShell::get_lastDir()
 std::string SmallShell::get_shellPrompt()
 {
   return m_shellPrompt;
+}
+
+JobsList* SmallShell::get_jobsList()
+{
+  return m_jobsList;
 }
 
 void SmallShell::set_lastDir(const std::string newDir)
@@ -195,7 +205,7 @@ ChangeDirCommand::ChangeDirCommand(const char* cmd_line, char** plastPwd): Built
 
 void ChangeDirCommand::execute()
 {
-  char* args[MAX_LINE_LEN];
+  char* args[MAX_ARGS];
   args[0] = (char*)malloc(13);
   int argsNum = _parseCommandLine(m_cmdLine, args);
   if (argsNum > 2){
@@ -238,7 +248,7 @@ ChpromptCommand::ChpromptCommand(const char* cmd_line):  BuiltInCommand(cmd_line
 
 void ChpromptCommand::execute()
 {
-  char* args[MAX_LINE_LEN];
+  char* args[MAX_ARGS];
   int argsNum = _parseCommandLine(m_cmdLine, args);
   SmallShell& shell = SmallShell::getInstance();
   if(argsNum == 1)
@@ -249,3 +259,9 @@ void ChpromptCommand::execute()
   }
 }
 
+JobsCommand::JobsCommand(const char* cmd_line, JobsList* jobs):  BuiltInCommand(cmd_line)
+{
+  m_cmdLine = new char(strlen(cmd_line) + 1);
+  strcpy(m_cmdLine, cmd_line);
+  m_jobs = jobs;
+}
