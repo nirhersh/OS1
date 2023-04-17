@@ -105,13 +105,13 @@ class JobsList {
     int m_jobId;
     time_t m_entryTime;
     Command* m_command;
-    std::string m_commandName;
     bool m_isStopped;
   public:
-    JobEntry(int jobId, time_t entryTime, Command* command, std::string commandName, bool isStopped = false) :
-    m_jobId(jobId), m_entryTime(entryTime), m_command(command), m_commandName(commandName), m_isStopped(isStopped){}
+    JobEntry(int jobId, time_t entryTime, Command* command, bool isStopped = false) :
+    m_jobId(jobId), m_entryTime(entryTime), m_command(command), m_isStopped(isStopped){}
   };
-  std::vector<JobEntry> m_jobsList;
+  std::vector<JobEntry*> m_jobsList;
+  int m_maxJobId;
  // TODO: Add your data members
  public:
   JobsList();

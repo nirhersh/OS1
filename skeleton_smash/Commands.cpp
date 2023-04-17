@@ -16,7 +16,8 @@ using namespace std;
 #define SYSCALL_FAILED -1
 #define DEFAULT_SHELL_PROMPT "smash"
 #define FIRST_ARGUMENT 1
-#define MAX_ARGS 20
+#define MAX_ARGS 80
+#define MAX_NUM_OF_PROCESSES 100
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
@@ -170,6 +171,23 @@ void SmallShell::set_shellPrompt(const std::string newPrompt)
 }
 
 
+//******************************************* Jobs List Implemetation **************************************//
+
+JobsList::JobsList(){
+  m_maxJobId = 0;
+}
+
+void JobsList::addJob(Command* cmd, bool isStopped = false){
+  if(isStopped){
+    m_jobsList.push_back(new JobsList::JobEntry(m_maxJobId+1, time(nullptr), cmd, true));
+  }else{
+    m_jobsList.push_back(new JobsList::JobEntry(m_maxJobId+1, time(nullptr), cmd));
+  }
+  m_maxJobId++;
+}
+
+
+
 //******************************************* HELPFULL FUNCTIONS **************************************//
 
 
@@ -314,7 +332,7 @@ void ExternalCommand::execute()
     if(m_isBackground){ //in case of background
       int pid = fork();
       if(pid == 0){ //child proccess
-      setpgrp();
+        setpgrp();
         execvp(m_command[0], m_command);
         return;
       } else { //parent proccess
@@ -354,6 +372,10 @@ void ExternalCommand::execute()
       }
     }
   }
+}
+
+void JobsCommand::execute(){
+  return;
 }
 
 //******************************************* SPECIAL COMMAND IMPLEMENTATION **************************************//
