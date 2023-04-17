@@ -13,6 +13,7 @@ class Command {
   // TODO: add fields 
 
 public:
+  std::string m_commandName;
   Command(const char* cmd_line);
   virtual ~Command() {}
   virtual void execute() = 0;
@@ -28,10 +29,10 @@ class BuiltInCommand : public Command {
 };
 
 class ExternalCommand : public Command {
-  char* m_command[COMMAND_MAX_ARGS];
   bool m_isBackground;
   bool m_isComplex;
  public:
+  char* m_command[COMMAND_MAX_ARGS];
   ExternalCommand(const char* cmd_line);
   virtual ~ExternalCommand() {}
   void execute() override;
@@ -101,14 +102,18 @@ public:
 class JobsList {
  public:
   class JobEntry {
-  protected:
+  public:
     int m_jobId;
     time_t m_entryTime;
-    Command* m_command;
     bool m_isStopped;
-  public:
-    JobEntry(int jobId, time_t entryTime, Command* command, bool isStopped = false) :
-    m_jobId(jobId), m_entryTime(entryTime), m_command(command), m_isStopped(isStopped){}
+    std::string m_commandName;
+    pid_t m_pid;
+    JobEntry(int jobId, time_t entryTime, Command* command, bool isStopped) :
+    m_jobId(jobId), m_entryTime(entryTime), m_isStopped(isStopped)
+    {
+      m_commandName = command->m_commandName;
+      m_pid = getpid();
+    }
   };
   std::vector<JobEntry*> m_jobsList;
   int m_maxJobId;

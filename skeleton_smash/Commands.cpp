@@ -18,6 +18,7 @@ using namespace std;
 #define FIRST_ARGUMENT 1
 #define MAX_ARGS 80
 #define MAX_NUM_OF_PROCESSES 100
+#define MAX_NUM_OF_PROCESSES 100
 
 const std::string WHITESPACE = " \n\r\t\f\v";
 
@@ -89,6 +90,9 @@ void _removeBackgroundSign(char* cmd_line) {
 
 // TODO: Add your implementation for classes in Commands.h 
 
+//******************************************* Jobs List Implemetation **************************************//
+
+
 //******************************************* SMALL SHELL IMPLEMENTATION **************************************//
 
 
@@ -96,7 +100,7 @@ SmallShell::SmallShell() {
 // TODO: add your implementation
   set_lastDir("");
   m_shellPrompt = "smash";
-  //m_jobsList = new JobsList();
+  m_jobsList = new JobsList();
 }
 
 SmallShell::~SmallShell() {
@@ -177,14 +181,43 @@ JobsList::JobsList(){
   m_maxJobId = 0;
 }
 
-void JobsList::addJob(Command* cmd, bool isStopped = false){
-  if(isStopped){
-    m_jobsList.push_back(new JobsList::JobEntry(m_maxJobId+1, time(nullptr), cmd, true));
-  }else{
-    m_jobsList.push_back(new JobsList::JobEntry(m_maxJobId+1, time(nullptr), cmd));
-  }
+void JobsList::addJob(Command* cmd, bool isStopped){
+    m_jobsList.push_back(new JobsList::JobEntry(m_maxJobId+1, time(nullptr), cmd, isStopped));
   m_maxJobId++;
 }
+
+void JobsList::printJobsList()
+{
+  for (JobEntry* job : m_jobsList)
+  {
+    time_t elapsed = difftime(time(nullptr), job->m_entryTime);
+    std::string outputStr = "[" + std::to_string(job->m_jobId) + "] " + job->m_commandName + " : " +
+                          std::to_string(job->m_pid) + " " + std::to_string(elapsed) + " secs ";
+    if(job->m_isStopped){
+      std::cout << outputStr + "(stopped)" << std::endl;
+    } else {
+      std::cout << outputStr << std::endl;
+    }
+  }
+}
+
+void JobsList::killAllJobs()
+{
+  for (JobEntry* job : m_jobsList)
+  {
+    int status = kill(job->m_pid, SIGKILL);
+    assert(status != -1);
+  }
+  m_jobsList.empty(); 
+}
+
+void JobsList::removeFinishedJobs()
+{
+  
+}
+
+
+
 
 
 
@@ -194,7 +227,14 @@ void JobsList::addJob(Command* cmd, bool isStopped = false){
 
 //******************************************* BUILT-IN COMMANDS IMPLEMENTATION **************************************
 //Command::~Command() {}
-Command::Command(const char* cmd_line){}
+Command::Command(const char* cmd_line)
+{
+  char* args[MAX_ARGS];
+  int argsNum = _parseCommandLine(cmd_line, args);
+  m_commandName = args[0];
+}
+
+
 BuiltInCommand::BuiltInCommand(const char* cmd_line): Command(cmd_line){}
 
 
@@ -230,7 +270,6 @@ ChangeDirCommand::ChangeDirCommand(const char* cmd_line, char** plastPwd): Built
 void ChangeDirCommand::execute()
 {
   char* args[MAX_ARGS];
-  args[0] = (char*)malloc(13);
   int argsNum = _parseCommandLine(m_cmdLine, args);
   if (argsNum > 2){
     std::cout << "smash error: cd: too many agruments" << std::endl;
