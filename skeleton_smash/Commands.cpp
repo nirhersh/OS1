@@ -6,6 +6,8 @@
 #include <sys/wait.h>
 #include <iomanip>
 #include "Commands.h"
+#include <cstring>
+#include <cstdlib>
 
 #include <assert.h>
 
@@ -61,7 +63,7 @@ int _parseCommandLine(const char* cmd_line, char** args) {
   FUNC_EXIT()
 }
 
-bool _isBackgroundComamnd(const char* cmd_line) {
+bool _isBackgroundCommand(const char* cmd_line) {
   const string str(cmd_line);
   return str[str.find_last_not_of(WHITESPACE)] == '&';
 }
@@ -93,7 +95,7 @@ SmallShell::SmallShell() {
 // TODO: add your implementation
   set_lastDir("");
   m_shellPrompt = "smash";
-  m_jobsList = new JobsList();
+  //m_jobsList = new JobsList();
 }
 
 SmallShell::~SmallShell() {
@@ -121,10 +123,14 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   else if (firstWord.compare("chprompt") == 0) {
     return new ChpromptCommand(cmd_line);
   }
-  else if (firstWord.compare("jobs") == 0){
-    return new JobsCommand(cmd_line, this->get_jobsList());
+  // else if (firstWord.compare("jobs") == 0){
+  //   return new JobsCommand(cmd_line, this->get_jobsList());
+  // }
+  //special commands:
+  //by default, assuming this is an external command:
+  else {
+    return new ExternalCommand(cmd_line);
   }
-  //add ifs for every command
   return nullptr;
 }
 
@@ -259,9 +265,96 @@ void ChpromptCommand::execute()
   }
 }
 
-JobsCommand::JobsCommand(const char* cmd_line, JobsList* jobs):  BuiltInCommand(cmd_line)
-{
-  m_cmdLine = new char(strlen(cmd_line) + 1);
-  strcpy(m_cmdLine, cmd_line);
-  m_jobs = jobs;
+// JobsCommand::JobsCommand(const char* cmd_line, JobsList* jobs):  BuiltInCommand(cmd_line)
+// {
+//   m_cmdLine = new char(strlen(cmd_line) + 1);
+//   strcpy(m_cmdLine, cmd_line);
+//   m_jobs = jobs;
+// }
+
+
+
+
+//******************************************* EXTERNAL COMMANDS IMPLEMENTATION **************************************//
+
+char** merge_arguments_arrays(char** arr1, char** arr2) {
+    int len1 = 0, len2 = 0;
+    while (arr1[len1] != nullptr) len1++;
+    while (arr2[len2] != nullptr) len2++;
+
+    char** mergedArray = new char*[len1 + len2 + 1];
+    std::memcpy(mergedArray, arr1, len1 * sizeof(char*));
+    std::memcpy(mergedArray + len1, arr2, (len2 + 1) * sizeof(char*));
+
+    return mergedArray;
 }
+
+bool is_complex_external_command(const char* cmd_line)
+{
+  std::string str(cmd_line);
+    if (str.find('*') != std::string::npos || str.find('?') != std::string::npos) {
+      return true;
+    }
+    return false;
+}
+
+ExternalCommand::ExternalCommand(const char* cmd_line): Command(cmd_line)
+{
+  m_isBackground = _isBackgroundCommand(cmd_line);
+  m_isComplex = is_complex_external_command(cmd_line);
+  char* commandDup = (char*)malloc(strlen(cmd_line) + 1); //to remove the & sign if exists
+  strcpy(commandDup, cmd_line);
+  _removeBackgroundSign(commandDup);
+  _parseCommandLine(commandDup, m_command);
+}
+
+void ExternalCommand::execute()
+{
+  if(!m_isComplex){
+    if(m_isBackground){ //in case of background
+      int pid = fork();
+      if(pid == 0){ //child proccess
+      setpgrp();
+        execvp(m_command[0], m_command);
+        return;
+      } else { //parent proccess
+        return;
+      }
+    } else { // in case of foreground
+      int pid = fork();
+      if(pid == 0){ //child proccess
+        setpgrp();
+        execvp(m_command[0], m_command);
+        return;
+      } else { //parent proccess
+        waitpid(pid, nullptr, 0);
+        return;
+      }
+    }
+  } else { //in case of complex
+    char* bashFlag[] = {"-c"};
+    if(m_isBackground){ //in case of bachground
+      int pid = fork();
+      if(pid == 0){ //child proccess
+        setpgrp();
+        execvp("bash", merge_arguments_arrays(bashFlag, m_command));
+        return;
+      } else { //parent proccess
+        return;
+      }
+    } else { // // in case of foreground
+      int pid = fork();
+      if(pid == 0){ //child proccess
+        setpgrp();
+        execvp("bash", merge_arguments_arrays(bashFlag, m_command));
+        return;
+      } else { //parent proccess
+        waitpid(pid, nullptr, 0);
+        return;
+      }
+    }
+  }
+}
+
+//******************************************* SPECIAL COMMAND IMPLEMENTATION **************************************//
+

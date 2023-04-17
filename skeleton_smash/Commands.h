@@ -28,6 +28,9 @@ class BuiltInCommand : public Command {
 };
 
 class ExternalCommand : public Command {
+  char* m_command[COMMAND_MAX_ARGS];
+  bool m_isBackground;
+  bool m_isComplex;
  public:
   ExternalCommand(const char* cmd_line);
   virtual ~ExternalCommand() {}
