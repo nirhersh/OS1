@@ -9,11 +9,13 @@
 #define COMMAND_ARGS_MAX_LENGTH (200)
 #define COMMAND_MAX_ARGS (20)
 
+class JobsList;
 class Command {
   // TODO: add fields 
 
 public:
   std::string m_commandName;
+  std::string m_commandLine;
   Command(const char* cmd_line);
   virtual ~Command() {}
   virtual void execute() = 0;
@@ -31,9 +33,10 @@ class BuiltInCommand : public Command {
 class ExternalCommand : public Command {
   bool m_isBackground;
   bool m_isComplex;
+  JobsList* m_jobs;
  public:
   char* m_command[COMMAND_MAX_ARGS];
-  ExternalCommand(const char* cmd_line);
+  ExternalCommand(const char* cmd_line, JobsList* jobs);
   virtual ~ExternalCommand() {}
   void execute() override;
 };
@@ -89,9 +92,10 @@ class ChpromptCommand : public BuiltInCommand {
   void execute() override;
 };
 
-class JobsList;
 class QuitCommand : public BuiltInCommand {
-// TODO: Add your data members
+  char* m_cmdLine;
+  bool m_isKill;
+  JobsList* m_jobs;
 public:
   QuitCommand(const char* cmd_line, JobsList* jobs);
   virtual ~QuitCommand() {}
@@ -108,12 +112,15 @@ class JobsList {
     bool m_isStopped;
     std::string m_commandName;
     pid_t m_pid;
-    JobEntry(int jobId, time_t entryTime, Command* command, bool isStopped) :
+    std::string m_commandLine;
+    JobEntry(int jobId, time_t entryTime, Command* command, bool isStopped, pid_t pid) :
     m_jobId(jobId), m_entryTime(entryTime), m_isStopped(isStopped)
     {
       m_commandName = command->m_commandName;
-      m_pid = getpid();
+      m_pid = pid;
+      m_commandLine = command->m_commandLine;
     }
+    bool isJobStopped();
   };
   std::vector<JobEntry*> m_jobsList;
   int m_maxJobId;
@@ -121,7 +128,7 @@ class JobsList {
  public:
   JobsList();
   ~JobsList();
-  void addJob(Command* cmd, bool isStopped = false);
+  void addJob(Command* cmd, pid_t pid,bool isStopped = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();
@@ -129,6 +136,10 @@ class JobsList {
   void removeJobById(int jobId);
   JobEntry * getLastJob(int* lastJobId);
   JobEntry *getLastStoppedJob(int *jobId);
+  JobEntry *getFirstJob(int *firstJobId);
+  int getJobsListSize(){
+    return m_jobsList.size();
+  }
   // TODO: Add extra methods or modify exisitng ones as needed
 };
 
@@ -142,16 +153,18 @@ class JobsCommand : public BuiltInCommand {
 };
 
 class ForegroundCommand : public BuiltInCommand {
- // TODO: Add your data members
- public:
+ char* m_cmdLine;
+ JobsList* m_jobs;
+public:
   ForegroundCommand(const char* cmd_line, JobsList* jobs);
   virtual ~ForegroundCommand() {}
   void execute() override;
 };
 
 class BackgroundCommand : public BuiltInCommand {
- // TODO: Add your data members
- public:
+  char* m_cmdLine;
+  JobsList* m_jobs;
+public:
   BackgroundCommand(const char* cmd_line, JobsList* jobs);
   virtual ~BackgroundCommand() {}
   void execute() override;
@@ -191,8 +204,9 @@ class SetcoreCommand : public BuiltInCommand {
 };
 
 class KillCommand : public BuiltInCommand {
- // TODO: Add your data members
- public:
+  char* m_cmdLine;
+  JobsList* m_jobs;
+public:
   KillCommand(const char* cmd_line, JobsList* jobs);
   virtual ~KillCommand() {}
   void execute() override;
@@ -229,5 +243,21 @@ class SmallShell {
 
   void set_shellPrompt(const std::string newDir);
 };
+
+void printInvalidArgumentsMessage(std::string cmdName);
+
+void printInvalidJobId(std::string cmdName, std::string jobId);
+
+void printEmptyJobsListMessage(std::string cmdName);
+
+void printNoStoppedJobsMessage(std::string cmdName);
+
+void printJobAlreadyRunningMessage(std::string cmdName, std::string jobId);
+
+bool isNumber(char* str);
+
+bool isNumberWithDash(char* str);
+
+void trimDash(char* str);
 
 #endif //SMASH_COMMAND_H_
