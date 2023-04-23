@@ -42,7 +42,9 @@ class ExternalCommand : public Command {
 };
 
 class PipeCommand : public Command {
-  // TODO: Add your data members
+  char m_firstCommand[COMMAND_ARGS_MAX_LENGTH];
+  char m_secondCommand[COMMAND_ARGS_MAX_LENGTH];
+  bool m_directStdErr;
  public:
   PipeCommand(const char* cmd_line);
   virtual ~PipeCommand() {}
@@ -50,7 +52,11 @@ class PipeCommand : public Command {
 };
 
 class RedirectionCommand : public Command {
- // TODO: Add your data members
+  char m_innerCommand[COMMAND_ARGS_MAX_LENGTH];
+  char* m_args[COMMAND_MAX_ARGS];
+  bool m_toOverride;
+  int m_argsNum;
+  std::string m_outputPath;
  public:
   explicit RedirectionCommand(const char* cmd_line);
   virtual ~RedirectionCommand() {}
@@ -188,7 +194,8 @@ class ChmodCommand : public BuiltInCommand {
 };
 
 class GetFileTypeCommand : public BuiltInCommand {
-  // TODO: Add your data members
+  char* m_args[COMMAND_MAX_ARGS];
+  int m_argsNum;
  public:
   GetFileTypeCommand(const char* cmd_line);
   virtual ~GetFileTypeCommand() {}
