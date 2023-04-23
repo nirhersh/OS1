@@ -8,12 +8,9 @@
 #include "Commands.h"
 #include <cstring>
 #include <cstdlib>
-<<<<<<< Updated upstream
 #include <cctype>
-=======
 #include <fcntl.h>
 #include <sys/stat.h>
->>>>>>> Stashed changes
 
 #include <assert.h>
 #include <algorithm>
@@ -154,7 +151,6 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   else if (firstWord.compare("chprompt") == 0) {
     return new ChpromptCommand(cmd_line);
   }
-<<<<<<< Updated upstream
   else if (firstWord.compare("jobs") == 0){
     return new JobsCommand(cmd_line, m_jobsList);
   }
@@ -171,13 +167,6 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
     return new KillCommand(cmd_line, m_jobsList);
   }
   //special commands:
-=======
-  // else if (firstWord.compare("jobs") == 0){
-  //   return new JobsCommand(cmd_line, this->get_jobsList());
-  // }
-  
-
->>>>>>> Stashed changes
   //by default, assuming this is an external command:
   else {
     return new ExternalCommand(cmd_line, this->get_jobsList());
@@ -275,7 +264,8 @@ void JobsList::killAllJobs()
 void JobsList::removeFinishedJobs()
 {
   for(long unsigned int i=0; i<m_jobsList.size(); ){
-    pid_t result = waitpid(m_jobsList[i]->m_pid, nullptr, WNOHANG);
+    int status;
+    pid_t result = waitpid(m_jobsList[i]->m_pid, &status, WNOHANG | WUNTRACED);
     if(result == 0){ //process is still running
       ++i;
       continue;
@@ -483,10 +473,8 @@ void ChangeDirCommand::execute()
         shell.set_lastDir(currentPath);
       }
     } else {
-      if(chdir(newPath) == SYSCALL_FAILED)
-      {
-        std::cout << "what do we suppose to do?" << std::endl;
-      } else { //if change dir successed
+      if(chdir(newPath) == SYSCALL_FAILED){}
+      else { //if change dir successed
         shell.set_lastDir(currentPath);
       }
     }  
@@ -720,11 +708,7 @@ bool is_complex_external_command(const char* cmd_line)
 
 ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(cmd_line)
 {
-<<<<<<< Updated upstream
   m_jobs = jobs;
-=======
-
->>>>>>> Stashed changes
   m_isBackground = _isBackgroundCommand(cmd_line);
   m_isComplex = is_complex_external_command(cmd_line);
   char* commandDup = (char*)malloc(strlen(cmd_line) + 1); //to remove the & sign if exists
@@ -955,8 +939,8 @@ void PipeCommand::execute()
       perror("smash error: fork failed");
       return;
   }
-  if(pid == 0){
-    setpgrp();
+  if(pid != 0){
+    //setpgrp();
     if(m_directStdErr){// DIRECT THE STD ERROR 
       int stdErrDup = dup(STDERR_FILENO);
       close(pipefd[0]); // close read end of pipe
@@ -972,8 +956,10 @@ void PipeCommand::execute()
       dup2(stdoutDup, STDOUT_FILENO); // redirect stdout to shell
       close(pipefd[1]);
     }
-    exit(0);
+    waitpid(pid, nullptr, 0);
+    //exit(0);
   } else {
+      setpgrp();
       //waitpid(pid, nullptr, 0);
       close(pipefd[1]); // close write end of pipe
       int stdInDup = dup(STDIN_FILENO);
@@ -981,6 +967,7 @@ void PipeCommand::execute()
       smashush.executeCommand(m_secondCommand); // execute command2
       dup2(stdInDup, STDIN_FILENO);
       close(pipefd[0]);
+      exit(0);
   }
 }
 //////////////////////////////////////////////////////////////////////////////////////////
