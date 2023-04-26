@@ -134,7 +134,7 @@ class JobsList {
  public:
   JobsList();
   ~JobsList();
-  void addJob(Command* cmd, pid_t pid,bool isStopped = false);
+  void addJob(Command* cmd, pid_t pid, bool isStopped = false);
   void printJobsList();
   void killAllJobs();
   void removeFinishedJobs();
@@ -227,6 +227,8 @@ class SmallShell {
   SmallShell();
   JobsList* m_jobsList;
  public:
+  int m_forgroundPid;
+  std::string m_forgroundCmdLine;
   Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
   void operator=(SmallShell const&)  = delete; // disable = operator

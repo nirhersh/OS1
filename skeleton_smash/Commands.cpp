@@ -107,6 +107,8 @@ SmallShell::SmallShell() {
   set_lastDir("");
   m_shellPrompt = "smash";
   m_jobsList = new JobsList();
+  m_forgroundPid = -1;
+  m_forgroundCmdLine = "";
 }
 
 SmallShell::~SmallShell() {
@@ -242,7 +244,7 @@ void JobsList::printJobsList()
     time_t elapsed = difftime(time(nullptr), job->m_entryTime);
     std::string outputStr = "[" + std::to_string(job->m_jobId) + "] " + job->m_commandName + " : " +
                           std::to_string(job->m_pid) + " " + std::to_string(elapsed) + " secs ";
-    if(job->isJobStopped()){
+    if(job->m_isStopped){
       std::cout << outputStr + "(stopped)" << std::endl;
     } else {
       std::cout << outputStr << std::endl;
@@ -553,12 +555,16 @@ void ForegroundCommand::execute(){
     perror("smash error: kill failed");
     return;
   }
-  pid_t waitResult = waitpid(jobToFg->m_pid, nullptr, 0); //wait for child to finish
+  SmallShell& smashguy = SmallShell::getInstance();
+  smashguy.m_forgroundCmdLine = jobToFg->m_commandLine;
+  smashguy.m_forgroundPid = jobToFg->m_pid;
+  jobToFg->m_isStopped = false;
+  m_jobs->removeJobById(jobToFgId);
+  pid_t waitResult = waitpid(jobToFg->m_pid, nullptr, WUNTRACED); //wait for child to finish
   if(waitResult == -1){
     perror("smash error: waitpid failed");
     return;
   }
-  m_jobs->removeJobById(jobToFgId);
 }
 
 BackgroundCommand::BackgroundCommand(const char* cmd_line, JobsList* jobs) : BuiltInCommand(cmd_line){
@@ -595,11 +601,15 @@ void BackgroundCommand::execute(){
       return;
     }
   }
-  if(!jobToBg->isJobStopped()){
+  if(!jobToBg->m_isStopped){
     printJobAlreadyRunningMessage("bg", std::to_string(jobToBgId));
     return;
   }
   std::cout << jobToBg->m_commandLine << std::endl;
+  SmallShell& smashguy = SmallShell::getInstance();
+  smashguy.m_forgroundCmdLine = jobToBg->m_commandLine;
+  smashguy.m_forgroundPid = jobToBg->m_pid;
+  jobToBg->m_isStopped = false;
   int result = kill(jobToBg->m_pid, SIGCONT);
   if (result == -1){
     perror("smash error: kill failed");
@@ -680,6 +690,11 @@ void KillCommand::execute(){
     perror("smash error: kill command failed");
     return;
   }
+  if(signalNumber == SIGSTOP){
+    jobToKill->m_isStopped = true;
+  } else if(signalNumber == SIGCONT){
+    jobToKill->m_isStopped = false;
+  }
   std::cout << "signal number " + std::to_string(signalNumber) + " was sent to pid " + std::to_string(jobToKill->m_pid) << std::endl;
 }
 
@@ -721,6 +736,7 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
 
 void ExternalCommand::execute()
 {
+  SmallShell& smashman = SmallShell::getInstance();
   if(!m_isComplex){
     if(m_isBackground){ //in case of background
       pid_t pid = fork();
@@ -736,6 +752,8 @@ void ExternalCommand::execute()
       }
     } else { // in case of foreground
       int pid = fork();
+      smashman.m_forgroundPid = pid;
+      smashman.m_forgroundCmdLine = m_commandLine;
       if(pid == 0){ //child proccess
         setpgrp();
         if(execvp(m_command[0], m_command) == SYSCALL_FAILED){
@@ -743,9 +761,11 @@ void ExternalCommand::execute()
         }
         exit(0);
       } else { //parent proccess
-        if(waitpid(pid, nullptr, 0) == SYSCALL_FAILED){
+        if(waitpid(pid, nullptr, WUNTRACED) == SYSCALL_FAILED){
           perror("smash error: waitpid failed");  
         }
+        smashman.m_forgroundPid = -1;
+        smashman.m_forgroundCmdLine = "";
         return;
       }
     }
@@ -763,8 +783,10 @@ void ExternalCommand::execute()
         m_jobs->addJob(this, pid);
         return;
       }
-    } else { // // in case of foreground
+    } else { // in case of foreground
       int pid = fork();
+      smashman.m_forgroundPid = pid;
+      smashman.m_forgroundCmdLine = m_commandLine;
       if(pid == 0){ //child proccess
         setpgrp();
         if(execvp("bash", merge_arguments_arrays(bashFlag, m_command)) == SYSCALL_FAILED){
@@ -772,9 +794,11 @@ void ExternalCommand::execute()
         }
         exit(0);
       } else { //parent proccess
-        if(waitpid(pid, nullptr, 0) == SYSCALL_FAILED){
+        if(waitpid(pid, nullptr, WUNTRACED) == SYSCALL_FAILED){
           perror("smash error: waitpid failed");  
         }
+        smashman.m_forgroundPid = -1;
+        smashman.m_forgroundCmdLine = "";
         return;
       }
     }
