@@ -23,7 +23,7 @@ void ctrlCHandler(int sig_num) {
   SmallShell& smashroom = SmallShell::getInstance();
   if(smashroom.m_forgroundPid != -1){
     kill(smashroom.m_forgroundPid, SIGKILL);
-      std::cout << "smash: proccess " << smashroom.m_forgroundPid << " was killed" << std::endl;
+    std::cout << "smash: proccess " << smashroom.m_forgroundPid << " was killed" << std::endl;
   }
   smashroom.m_forgroundPid = -1;
   smashroom.m_forgroundCmdLine = "";

@@ -540,7 +540,9 @@ void ForegroundCommand::execute(){
     printInvalidArgumentsMessage("fg");
     return;
   }
-  _removeBackgroundSign(args[1]);
+  if(args[FIRST_ARGUMENT]){
+    _removeBackgroundSign(args[FIRST_ARGUMENT]);
+  }
   if(argsNum == 2 && !isNumber(args[1])){
     printInvalidArgumentsMessage("fg");
     return;
@@ -593,8 +595,10 @@ void BackgroundCommand::execute(){
     printInvalidArgumentsMessage("bg");
     return;
   }
-  _removeBackgroundSign(args[1]);
-  if(argsNum == 2 && !isNumber(args[1])){
+  if(args[FIRST_ARGUMENT]){
+    _removeBackgroundSign(args[FIRST_ARGUMENT]);
+  }
+  if(argsNum == 2 && !isNumber(args[FIRST_ARGUMENT])){
     printInvalidArgumentsMessage("bg");
     return;
   }
@@ -677,7 +681,7 @@ KillCommand::KillCommand(const char* cmd_line, JobsList* jobs) : BuiltInCommand(
 void KillCommand::execute(){
   char* args[MAX_ARGS] = {nullptr};
   int argsNum = _parseCommandLine(m_cmdLine, args);
-  if(argsNum < 3){
+  if(argsNum != 3){
     printInvalidArgumentsMessage("kill");
     return;
   }
@@ -709,16 +713,13 @@ void KillCommand::execute(){
 
 //******************************************* EXTERNAL COMMANDS IMPLEMENTATION **************************************//
 
-char** merge_arguments_arrays(char** arr1, char** arr2) {
-    int len1 = 0, len2 = 0;
-    while (arr1[len1] != nullptr) len1++;
-    while (arr2[len2] != nullptr) len2++;
-
-    char** mergedArray = new char*[len1 + len2 + 1];
-    std::memcpy(mergedArray, arr1, len1 * sizeof(char*));
-    std::memcpy(mergedArray + len1, arr2, (len2 + 1) * sizeof(char*));
-
-    return mergedArray;
+char** merge_arguments_arrays(char* str1, char* str2) {
+  int len3 = 2;
+  char** mergedArray = new char*[len3 + 1];
+  mergedArray[0] = str1;
+  mergedArray[1] = str2;
+  mergedArray[2] = nullptr;
+  return mergedArray;
 }
 
 bool is_complex_external_command(const char* cmd_line)
@@ -729,7 +730,6 @@ bool is_complex_external_command(const char* cmd_line)
     }
     return false;
 }
-
 ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(cmd_line)
 {
   m_jobs = jobs;
@@ -779,12 +779,14 @@ void ExternalCommand::execute()
       }
     }
   } else { //in case of complex
-    char* bashFlag[] = {"-c"};
+    char* cmdLineCpy = new char[m_commandLine.size() + 1];
+    strcpy(cmdLineCpy, m_commandLine.c_str());
+    char* merged[] = {"bash", "-c", cmdLineCpy, nullptr};
     if(m_isBackground){ //in case of bachground
       int pid = fork();
       if(pid == 0){ //child proccess
         setpgrp();
-        if(execvp("bash", merge_arguments_arrays(bashFlag, m_command)) == SYSCALL_FAILED){
+        if(execvp("bash", merged) == SYSCALL_FAILED){
           perror("smash error: execvp failed");  
         }
         exit(0);
@@ -798,7 +800,7 @@ void ExternalCommand::execute()
       smashman.m_forgroundCmdLine = m_commandLine;
       if(pid == 0){ //child proccess
         setpgrp();
-        if(execvp("bash", merge_arguments_arrays(bashFlag, m_command)) == SYSCALL_FAILED){
+        if(execvp("bash", merged) == SYSCALL_FAILED){
           perror("smash error: execvp failed");  
         }
         exit(0);
@@ -819,7 +821,10 @@ void ExternalCommand::execute()
 
 RedirectionCommand::RedirectionCommand(const char* cmd_line): Command(cmd_line)
 {
-  m_argsNum = _parseCommandLine(cmd_line, m_args);
+  char* cmdLineCpy = new char[m_commandLine.size() + 1];
+  strcpy(cmdLineCpy, m_commandLine.c_str());
+  _removeBackgroundSign(cmdLineCpy);
+  m_argsNum = _parseCommandLine(cmdLineCpy, m_args);
   m_outputPath = m_args[m_argsNum - 1];
   if(std::strcmp(m_args[m_argsNum - 2], ">") == 0){
     m_toOverride = true;
@@ -946,13 +951,16 @@ void splitString(const char* str1, char* str2, char* str3, const char* symbol) {
 
 PipeCommand::PipeCommand(const char* cmd_line): Command(cmd_line)
 {
-  if (std::strstr(cmd_line, "|&") == nullptr) //then it consist only |
+  char* cmdLineCpy = new char[m_commandLine.size() + 1];
+  strcpy(cmdLineCpy, m_commandLine.c_str());
+  _removeBackgroundSign(cmdLineCpy);
+  if (std::strstr(cmdLineCpy, "|&") == nullptr) //then it consist only |
   {
     m_directStdErr = false;
-    splitString(cmd_line, m_firstCommand, m_secondCommand, "|");
+    splitString(cmdLineCpy, m_firstCommand, m_secondCommand, "|");
   } else {
     m_directStdErr = true;
-    splitString(cmd_line, m_firstCommand, m_secondCommand, "|&");
+    splitString(cmdLineCpy, m_firstCommand, m_secondCommand, "|&");
   }
 }
 
