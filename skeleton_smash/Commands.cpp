@@ -11,7 +11,6 @@
 #include <cctype>
 #include <fcntl.h>
 #include <sys/stat.h>
-
 #include <assert.h>
 #include <algorithm>
 
@@ -132,9 +131,12 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   else if (firstWord.compare("getfileinfo") == 0) {
     return new GetFileTypeCommand(cmd_line);
   }
-  
-  
-  
+  else if(firstWord.compare("setcore") == 0){
+    return new SetcoreCommand(cmd_line, m_jobsList);
+  }
+  else if(firstWord.compare("chmod") == 0){
+    return new ChmodCommand(cmd_line);
+  }
   //creating built-in commmands
   else if (firstWord.compare("") == 0) {
     //std::cout << "command empty" << std::endl;
@@ -147,8 +149,7 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
     return new GetCurrDirCommand(cmd_line);
   }
   else if (firstWord.compare("cd") == 0) {
-    char** plastPwd;
-    return new ChangeDirCommand(cmd_line, plastPwd);
+    return new ChangeDirCommand(cmd_line);
   }
   else if (firstWord.compare("chprompt") == 0) {
     return new ChpromptCommand(cmd_line);
@@ -219,12 +220,12 @@ void SmallShell::set_shellPrompt(const std::string newPrompt)
 
 bool JobsList::JobEntry::isJobStopped(){
   int status;
-    int res = waitpid(m_pid, &status, WNOHANG | WUNTRACED);
-    if(res == -1){
-      perror("smash error: waitpid command failed");
-      return false; 
-    }
-    return(WIFSTOPPED(status));
+  int res = waitpid(m_pid, &status, WNOHANG | WUNTRACED);
+  if(res == -1){
+    perror("smash error: waitpid failed");
+    return false; 
+  }
+  return(WIFSTOPPED(status));
 }
 
 JobsList::JobsList(){
@@ -271,10 +272,10 @@ void JobsList::removeFinishedJobs()
     if(result == 0){ //process is still running
       ++i;
       continue;
-    }else if(result == m_jobsList[i]->m_pid){ //process finished
+    }else if(WIFEXITED(status) || WIFSIGNALED(status)){ //process finished
       m_jobsList.erase(m_jobsList.begin() + i);
     }else{
-      assert(true);
+      perror("smash error: waitpid failed");
     }
     if(m_jobsList.size() != 0){
       m_maxJobId = m_jobsList.back()->m_jobId;
@@ -351,6 +352,10 @@ void printInvalidArgumentsMessage(std::string cmdName){
 
 void printInvalidJobId(std::string cmdName, std::string jobId){
   std::cout << "smash error: " + cmdName + ": job-id " + jobId + " does not exist" << std::endl;
+}
+
+void printInvalidCoreNumMessage(std::string cmdName){
+  std::cout << "smash error: " + cmdName +": invalid core number" << std::endl;
 }
 
 void printEmptyJobsListMessage(std::string cmdName){
@@ -443,7 +448,7 @@ void GetCurrDirCommand::execute()
 
 
 
-ChangeDirCommand::ChangeDirCommand(const char* cmd_line, char** plastPwd): BuiltInCommand(cmd_line)
+ChangeDirCommand::ChangeDirCommand(const char* cmd_line): BuiltInCommand(cmd_line)
 {
   m_cmdLine = new char[strlen(cmd_line) + 1];
   strcpy(m_cmdLine, cmd_line);
@@ -451,17 +456,18 @@ ChangeDirCommand::ChangeDirCommand(const char* cmd_line, char** plastPwd): Built
 
 void ChangeDirCommand::execute()
 {
-  char* args[COMMAND_MAX_ARGS];
+  char* args[COMMAND_MAX_ARGS] = {nullptr};
   int argsNum = _parseCommandLine(m_cmdLine, args);
   if (argsNum > 2){
     std::cout << "smash error: cd: too many agruments" << std::endl;
+    return;
   }
   else if(argsNum < 2){
-    std::cout << "what do we suppose to do?" << std::endl;
+    return;
   } else {
     SmallShell& shell = SmallShell::getInstance();
-    char* newPath = args[FIRST_ARGUMENT];
-    char currentPath[MAX_LINE_LEN];
+    char* newPath = args[FIRST_ARGUMENT]; //= {nullptr};
+    char currentPath[MAX_LINE_LEN] = {0};
     getcwd(currentPath, sizeof(currentPath));
     const char* oldPath = shell.get_lastDir().c_str();
     string oldPathstr = shell.get_lastDir();
@@ -471,11 +477,18 @@ void ChangeDirCommand::execute()
       {
         std::cout << "smash error: cd: OLDPWD not set" << std::endl;
       } else{
-        chdir(oldPath);
-        shell.set_lastDir(currentPath);
+        if(chdir(oldPath) == SYSCALL_FAILED){
+          perror("smash error: chdir failed");
+          return;
+        }else{
+          shell.set_lastDir(currentPath);
+        }
       }
     } else {
-      if(chdir(newPath) == SYSCALL_FAILED){}
+      if(chdir(newPath) == SYSCALL_FAILED){
+        perror("smash error: chdir failed");
+        return;
+      }
       else { //if change dir successed
         shell.set_lastDir(currentPath);
       }
@@ -653,10 +666,6 @@ void QuitCommand::execute(){
     }
   }
   exit(1);
-  //int result = kill(getpid(), SIGKILL);
-  // if(result == -1){
-  //   perror("smash error: kill failed");
-  // }
 }
 
 KillCommand::KillCommand(const char* cmd_line, JobsList* jobs) : BuiltInCommand(cmd_line){
@@ -687,7 +696,7 @@ void KillCommand::execute(){
   }
   int result = kill(jobToKill->m_pid, signalNumber);
   if(result == -1){
-    perror("smash error: kill command failed");
+    perror("smash error: kill failed");
     return;
   }
   if(signalNumber == SIGSTOP){
@@ -757,7 +766,7 @@ void ExternalCommand::execute()
       if(pid == 0){ //child proccess
         setpgrp();
         if(execvp(m_command[0], m_command) == SYSCALL_FAILED){
-            //perror("smash error: execvp failed");  
+            perror("smash error: execvp failed");  
         }
         exit(0);
       } else { //parent proccess
@@ -916,7 +925,7 @@ void RedirectionCommand::execute()
   }
 }
 
-void splitString(const char* str1, char* str2, char* str3, char* symbol) {
+void splitString(const char* str1, char* str2, char* str3, const char* symbol) {
     // Find the position of the delimiter "|&"
     const char* delimiter = std::strstr(str1, symbol);
     if (delimiter == nullptr) {
@@ -1035,5 +1044,66 @@ void GetFileTypeCommand::execute()
 }
 
 
+SetcoreCommand::SetcoreCommand(const char* cmd_line, JobsList* jobs) :  BuiltInCommand(cmd_line){
+  m_cmdLine = new char[strlen(cmd_line) + 1];
+  strcpy(m_cmdLine, cmd_line);
+  m_jobs = jobs;
+}
 
+void SetcoreCommand::execute(){
+  char* args[COMMAND_MAX_ARGS] = {nullptr};
+  int argsNum = _parseCommandLine(m_cmdLine, args);
+  if(argsNum != 3 || (argsNum == 3 && (!isNumber(args[1]) || !isNumber(args[2])))){
+    printInvalidArgumentsMessage("setcore");
+    return;
+  }
+  int jobId = std::stoi(args[1]);
+  int coreNum = std::stoi(args[2]);
+  JobsList::JobEntry* job = m_jobs->getJobById(jobId);
+  if(job == nullptr){
+    printInvalidJobId("setcore", args[1]);
+    return;
+  }
+  int numOfCores = sysconf(_SC_NPROCESSORS_ONLN); //get number of cores in cpu
+  if(numOfCores == SYSCALL_FAILED){
+    perror("smash error: sysconfig failed");
+    return;
+  }
+  if(coreNum < 0 || coreNum >= numOfCores){
+    printInvalidCoreNumMessage("setcore");
+    return;
+  }
 
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(coreNum, &cpuset);
+
+  if(sched_setaffinity(job->m_pid, sizeof(cpu_set_t), &cpuset) == SYSCALL_FAILED){
+    perror("smash error: sched_setaffinity failed");
+    return;
+  }
+}
+
+ChmodCommand::ChmodCommand(const char* cmd_line) : BuiltInCommand(cmd_line){
+  m_cmdLine = new char[strlen(cmd_line) + 1];
+  strcpy(m_cmdLine, cmd_line);
+}
+
+void ChmodCommand::execute(){
+  char* args[COMMAND_MAX_ARGS] = {nullptr};
+  int argsNum = _parseCommandLine(m_cmdLine, args);
+  if(argsNum != 3 || !isNumber(args[1])){
+    printInvalidArgumentsMessage("chmod");
+  }
+  mode_t mode = std::stoi(args[1], 0, 8); // need the mode number in octal base
+  char currentWorkingDir[MAX_LINE_LEN] = {0};
+  if(getcwd(currentWorkingDir, sizeof(currentWorkingDir)) == nullptr){
+    perror("smash error: getcwd failed");
+    return;
+  }
+  std::string filePath =  std::string(currentWorkingDir) + "/" + args[2];
+  if(chmod(filePath.c_str(), mode) == SYSCALL_FAILED){
+    perror("smash error: chmod failed");
+    return;
+  }
+}

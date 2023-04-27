@@ -71,7 +71,7 @@ public:
   char* m_cmdLine;
   std::string m_newDear;
   std::string m_lastDir;
-  ChangeDirCommand(const char* cmd_line, char** plastPwd);
+  ChangeDirCommand(const char* cmd_line);
   virtual ~ChangeDirCommand() {}
   void execute() override;
 };
@@ -186,7 +186,7 @@ class TimeoutCommand : public BuiltInCommand {
 };
 
 class ChmodCommand : public BuiltInCommand {
-  // TODO: Add your data members
+  char* m_cmdLine;
  public:
   ChmodCommand(const char* cmd_line);
   virtual ~ChmodCommand() {}
@@ -203,9 +203,10 @@ class GetFileTypeCommand : public BuiltInCommand {
 };
 
 class SetcoreCommand : public BuiltInCommand {
-  // TODO: Add your data members
+  char* m_cmdLine;
+  JobsList* m_jobs;
  public:
-  SetcoreCommand(const char* cmd_line);
+  SetcoreCommand(const char* cmd_line, JobsList* jobs);
   virtual ~SetcoreCommand() {}
   void execute() override;
 };
@@ -256,6 +257,8 @@ class SmallShell {
 void printInvalidArgumentsMessage(std::string cmdName);
 
 void printInvalidJobId(std::string cmdName, std::string jobId);
+
+void printInvalidCoreNumMessage(std::string cmdName);
 
 void printEmptyJobsListMessage(std::string cmdName);
 
