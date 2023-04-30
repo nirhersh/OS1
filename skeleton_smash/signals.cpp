@@ -1,5 +1,6 @@
 #include <iostream>
 #include <signal.h>
+#include <sys/wait.h>
 #include "signals.h"
 #include "Commands.h"
 
@@ -30,6 +31,30 @@ void ctrlCHandler(int sig_num) {
 }
 
 void alarmHandler(int sig_num) {
-  std::cout << "smash: got an alarm" << std::endl;
+  SmallShell& smashichan = SmallShell::getInstance();
+  for(auto& pair : smashichan.m_childAlarm){
+    time_t diff = difftime(time(nullptr), std::get<2>(pair.second));
+    //std::cout << "diff: " << diff << "pid: " << pair.first << std::endl;
+    if(diff >= std::get<1>(pair.second)){
+      std::cout << "smash: got an alarm" << std::endl;
+      std::cout << "smash: " + std::get<0>(pair.second) + " timed out!" << std::endl;
+      int result = kill(pair.first, SIGKILL);
+      if(result == -1){
+        perror("smash error: kill failed");
+        return;
+      }else{
+        smashichan.m_childAlarm.erase(pair.first);
+        break;
+      }
+    }
+    for(auto& pair : smashichan.m_childAlarm){
+      int status;
+      pid_t result = waitpid(pair.first, &status, WNOHANG | WUNTRACED);
+      if(WIFEXITED(status) || WIFSIGNALED(status)){ //process finished
+          smashichan.m_childAlarm.erase(pair.first);
+          break;
+      }
+    }
+  }
 }
 

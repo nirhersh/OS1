@@ -732,6 +732,7 @@ bool is_complex_external_command(const char* cmd_line)
 }
 ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(cmd_line)
 {
+  m_timeout = -1;
   m_jobs = jobs;
   m_isBackground = _isBackgroundCommand(cmd_line);
   m_isComplex = is_complex_external_command(cmd_line);
@@ -740,7 +741,22 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
   if(strlen(cmd_line) != 0){
     _removeBackgroundSign(commandDup);
   }
-  _parseCommandLine(commandDup, m_command);
+  char* tempArgs[MAX_ARGS] = {nullptr};
+  int numArgs = _parseCommandLine(commandDup, tempArgs);
+  if(strcmp(tempArgs[0], "timeout") == 0){
+    if(!isNumber(tempArgs[FIRST_ARGUMENT])){
+      assert(false); 
+    } else {
+      m_timeout = std::stoi(tempArgs[FIRST_ARGUMENT]);
+      for(int i = 2; i < numArgs; i++)
+      {
+        m_command[i - 2] = tempArgs[i];
+      }
+    }
+  }
+  else {
+    _parseCommandLine(commandDup, m_command);
+  }
 }
 
 void ExternalCommand::execute()
@@ -757,6 +773,10 @@ void ExternalCommand::execute()
         exit(0);
       } else { //parent proccess
         m_jobs->addJob(this, pid);
+        if(m_timeout != -1){
+          smashman.m_childAlarm[pid] = std::make_tuple(m_commandLine, m_timeout, time(nullptr));
+          alarm(m_timeout);
+        }
         return;
       }
     } else { // in case of foreground
@@ -770,6 +790,10 @@ void ExternalCommand::execute()
         }
         exit(0);
       } else { //parent proccess
+        if(m_timeout != -1){
+          smashman.m_childAlarm[pid] = std::make_tuple(m_commandLine, m_timeout, time(nullptr));
+          alarm(m_timeout);
+        }
         if(waitpid(pid, nullptr, WUNTRACED) == SYSCALL_FAILED){
           perror("smash error: waitpid failed");  
         }
@@ -792,6 +816,10 @@ void ExternalCommand::execute()
         exit(0);
       } else { //parent proccess
         m_jobs->addJob(this, pid);
+        if(m_timeout != -1){
+          smashman.m_childAlarm[pid] = std::make_tuple(m_commandLine, m_timeout, time(nullptr));
+          alarm(m_timeout);
+        }
         return;
       }
     } else { // in case of foreground
@@ -805,6 +833,10 @@ void ExternalCommand::execute()
         }
         exit(0);
       } else { //parent proccess
+        if(m_timeout != -1){
+          smashman.m_childAlarm[pid] = std::make_tuple(m_commandLine, m_timeout, time(nullptr));
+          alarm(m_timeout);
+        }
         if(waitpid(pid, nullptr, WUNTRACED) == SYSCALL_FAILED){
           perror("smash error: waitpid failed");  
         }

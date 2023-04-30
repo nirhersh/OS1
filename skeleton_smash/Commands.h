@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 #include <time.h>
+#include <map>
+#include <tuple>
 
 
 #define COMMAND_ARGS_MAX_LENGTH (200)
@@ -34,6 +36,7 @@ class ExternalCommand : public Command {
   bool m_isBackground;
   bool m_isComplex;
   JobsList* m_jobs;
+  int m_timeout;
  public:
   char* m_command[COMMAND_MAX_ARGS];
   ExternalCommand(const char* cmd_line, JobsList* jobs);
@@ -229,6 +232,7 @@ class SmallShell {
   JobsList* m_jobsList;
  public:
   int m_forgroundPid;
+  std::map<pid_t, std::tuple<std::string, int, time_t>> m_childAlarm;
   std::string m_forgroundCmdLine;
   Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
