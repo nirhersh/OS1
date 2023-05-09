@@ -244,7 +244,7 @@ void JobsList::printJobsList()
   {
     time_t elapsed = difftime(time(nullptr), job->m_entryTime);
     std::string outputStr = "[" + std::to_string(job->m_jobId) + "] " + job->m_commandLine + " : " +
-                          std::to_string(job->m_pid) + " " + std::to_string(elapsed) + " secs ";
+                          std::to_string(job->m_pid) + " " + std::to_string(elapsed) + " secs";
     if(job->m_isStopped){
       std::cout << outputStr + "(stopped)" << std::endl;
     } else {
@@ -623,7 +623,7 @@ void BackgroundCommand::execute(){
     printJobAlreadyRunningMessage("bg", std::to_string(jobToBgId));
     return;
   }
-  std::cout << jobToBg->m_commandLine << std::endl;
+  std::cout << jobToBg->m_commandLine +" : " + std::to_string(jobToBg->m_pid) << std::endl;
   SmallShell& smashguy = SmallShell::getInstance();
   smashguy.m_forgroundCmdLine = jobToBg->m_commandLine;
   smashguy.m_forgroundPid = jobToBg->m_pid;
