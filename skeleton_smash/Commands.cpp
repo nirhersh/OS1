@@ -347,27 +347,27 @@ JobsList::JobEntry *JobsList::getFirstJob(int *firstJobId){
 //******************************************* HELPFULL FUNCTIONS **************************************//
 
 void printInvalidArgumentsMessage(std::string cmdName){
-  std::cout << "smash error: " + cmdName +": invalid arguments" << std::endl;
+  std::cerr << "smash error: " + cmdName +": invalid arguments" << std::endl;
 }
 
 void printInvalidJobId(std::string cmdName, std::string jobId){
-  std::cout << "smash error: " + cmdName + ": job-id " + jobId + " does not exist" << std::endl;
+  std::cerr << "smash error: " + cmdName + ": job-id " + jobId + " does not exist" << std::endl;
 }
 
 void printInvalidCoreNumMessage(std::string cmdName){
-  std::cout << "smash error: " + cmdName +": invalid core number" << std::endl;
+  std::cerr << "smash error: " + cmdName +": invalid core number" << std::endl;
 }
 
 void printEmptyJobsListMessage(std::string cmdName){
-  std::cout << "smash error: " + cmdName + ": jobs list is empty" << std::endl;
+  std::cerr << "smash error: " + cmdName + ": jobs list is empty" << std::endl;
 }
 
 void printNoStoppedJobsMessage(std::string cmdName){
-  std::cout << "smash error: " + cmdName + ": there is no stopped jobs to resume" << std::endl;
+  std::cerr << "smash error: " + cmdName + ": there is no stopped jobs to resume" << std::endl;
 }
 
 void printJobAlreadyRunningMessage(std::string cmdName, std::string jobId){
-  std::cout << "smash error: " + cmdName + ": job-id " + jobId + " is already running in the background" << std::endl;
+  std::cerr << "smash error: " + cmdName + ": job-id " + jobId + " is already running in the background" << std::endl;
 }
 
 bool isNumber(char* str){
@@ -459,7 +459,7 @@ void ChangeDirCommand::execute()
   char* args[COMMAND_MAX_ARGS] = {nullptr};
   int argsNum = _parseCommandLine(m_cmdLine, args);
   if (argsNum > 2){
-    std::cout << "smash error: cd: too many agruments" << std::endl;
+    std::cerr << "smash error: cd: too many agruments" << std::endl;
     return;
   }
   else if(argsNum < 2){
@@ -475,7 +475,7 @@ void ChangeDirCommand::execute()
     {
       if(strlen(oldPath) == 0)
       {
-        std::cout << "smash error: cd: OLDPWD not set" << std::endl;
+        std::cerr << "smash error: cd: OLDPWD not set" << std::endl;
       } else{
         if(chdir(oldPath) == SYSCALL_FAILED){
           perror("smash error: chdir failed");
