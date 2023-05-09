@@ -1,0 +1,7 @@
+smash> smash: got ctrl-Z
+smash: process 2 was stopped
+smash> smash: got an alarm
+smash: timeout 4 sleep 2 timed out!
+smash> signal number 9 was sent to pid 3
+smash> smash> smash: got an alarm
+smash: sending SIGKILL signal to 0 jobs:

@@ -1,0 +1,65 @@
+mkdir /home/student/Desktop/tempFolderChmodTest
+cd /home/student/Desktop/tempFolderChmodTest
+echo content > regularfile1
+echo > regularfile2
+echo "https://www.youtube.com/watch?v=dQw4w9WgXcQ" > /home/student/Desktop/tempFolderChmodTest/regularfile3
+chmod 777 regularfile1
+chmod 766 regularfile2
+chmod 710 /home/student/Desktop/tempFolderChmodTest/regularfile3
+stat -c "%A" regularfile1
+stat -c "%A" regularfile2
+stat -c "%A" regularfile3
+chmod 1 regularfile1
+chmod 2 regularfile2
+chmod 4 /home/student/Desktop/tempFolderChmodTest/regularfile3
+stat -c "%A" regularfile1
+stat -c "%A" regularfile2
+stat -c "%A" regularfile3
+chmod 31 regularfile1
+chmod 52 regularfile2
+chmod 64 /home/student/Desktop/tempFolderChmodTest/regularfile3
+stat -c "%A" regularfile1
+stat -c "%A" regularfile2
+stat -c "%A" regularfile3
+chmod 007 regularfile1
+chmod 663 regularfile2
+chmod 243 /home/student/Desktop/tempFolderChmodTest/regularfile3
+stat -c "%A" regularfile1
+stat -c "%A" regularfile2
+stat -c "%A" regularfile3
+chmod 7777 regularfile1
+chmod 1234 regularfile2
+chmod 2345 /home/student/Desktop/tempFolderChmodTest/regularfile3
+stat -c "%A" regularfile1
+stat -c "%A" regularfile2
+stat -c "%A" regularfile3
+chmod 3444 regularfile1
+chmod 4555 regularfile2
+chmod 6123 /home/student/Desktop/tempFolderChmodTest/regularfile3
+stat -c "%A" regularfile1
+stat -c "%A" regularfile2
+stat -c "%A" regularfile3
+chmod 13444 regularfile1
+chmod 14555 regularfile2
+chmod 16123 /home/student/Desktop/tempFolderChmodTest/regularfile3
+stat -c "%A" regularfile1
+stat -c "%A" regularfile2
+stat -c "%A" regularfile3
+chmod 13444 regularfile1
+chmod 14555 regularfile2
+chmod 16123 /home/student/Desktop/tempFolderChmodTest/regularfile3
+stat -c "%A" regularfile1
+stat -c "%A" regularfile2
+stat -c "%A" regularfile3
+chmod a regularfile1
+chmod 1 regularfile2 a
+chmod 1612 /home/student/Desktop/tempFolderChmodTest/regular file3 
+stat -c "%A" regularfile1
+stat -c "%A" regularfile2
+stat -c "%A" regularfile3
+chmod 777 regularfile1
+chmod 777 regularfile2
+chmod 777 regularfile3
+cd ..
+rm -rf /home/student/Desktop/tempFolderChmodTest
+quit

@@ -1,0 +1,2 @@
+/home/roei_bloch/operating_systems/OS1/skeleton_smash/temp
+smash pid is 6378
