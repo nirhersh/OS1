@@ -21,7 +21,7 @@ $(SMASH_BIN): $(OBJS)
 	$(COMPILER) $(COMPILER_FLAGS) $^ -o $@
 
 $(OBJS): %.o: %.cpp
-	$(COMPILER) $(COMPILER_FLAGS) -c $^
+	$(COMPILER) $(COMPILER_FLAGS) -c -g $^
 
 zip: $(SRCS) $(HDRS)
 	zip $(SUBMITTERS).zip $^ submitters.txt Makefile

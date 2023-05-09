@@ -50,3 +50,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+*.json
+
+*.txt
+
+smash
+infinite_loop
+skeleton_smash/tests/outputs/*
+skeleton_smash/*.zip
