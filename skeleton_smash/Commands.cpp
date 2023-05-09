@@ -324,13 +324,14 @@ JobsList::JobEntry * JobsList::getLastJob(int* lastJobId){
 JobsList::JobEntry *JobsList::getLastStoppedJob(int *jobId){
   JobEntry* lastStoppedJob = nullptr;
   for(long unsigned int i=0; i<m_jobsList.size(); i++){
-    bool result =m_jobsList[i]->isJobStopped();
+    bool result =m_jobsList[i]->m_isStopped;
     if(result == false){ //process is still running
       continue;
     }else{//process stopped
       lastStoppedJob = m_jobsList[i];
     }
   }
+  *jobId = lastStoppedJob->m_jobId;
   return lastStoppedJob;
 }
 
@@ -602,7 +603,7 @@ void BackgroundCommand::execute(){
     printInvalidArgumentsMessage("bg");
     return;
   }
-  int jobToBgId;
+  int jobToBgId = 0;
   JobsList::JobEntry* jobToBg;
   if(argsNum == 1){
     if(m_jobs->getJobsListSize() == 0){
