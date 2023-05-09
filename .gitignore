@@ -57,5 +57,5 @@ dkms.conf
 
 smash
 infinite_loop
-skeleton_smash/tests/outputs/*
+skeleton_smash/nadav_tests/outputs/*
 skeleton_smash/*.zip
