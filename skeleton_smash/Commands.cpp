@@ -108,6 +108,8 @@ SmallShell::SmallShell() {
   m_jobsList = new JobsList();
   m_forgroundPid = -1;
   m_forgroundCmdLine = "";
+  m_isForeGround = false;
+  m_forgroundJobid = -1;
 }
 
 SmallShell::~SmallShell() {
@@ -120,6 +122,8 @@ SmallShell::~SmallShell() {
 Command * SmallShell::CreateCommand(const char* cmd_line) {
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
+  SmallShell& smashboy = SmallShell::getInstance();
+  smashboy.m_isForeGround = true;
 
   //special commands:
   if (std::strchr(cmd_line, '>') != nullptr) {
@@ -246,7 +250,7 @@ void JobsList::printJobsList()
     std::string outputStr = "[" + std::to_string(job->m_jobId) + "] " + job->m_commandLine + " : " +
                           std::to_string(job->m_pid) + " " + std::to_string(elapsed) + " secs";
     if(job->m_isStopped){
-      std::cout << outputStr + "(stopped)" << std::endl;
+      std::cout << outputStr + " (stopped)" << std::endl;
     } else {
       std::cout << outputStr << std::endl;
     }
@@ -574,8 +578,9 @@ void ForegroundCommand::execute(){
   SmallShell& smashguy = SmallShell::getInstance();
   smashguy.m_forgroundCmdLine = jobToFg->m_commandLine;
   smashguy.m_forgroundPid = jobToFg->m_pid;
+  smashguy.m_isForeGround = true;
+  smashguy.m_forgroundJobid = jobToFg->m_jobId;
   jobToFg->m_isStopped = false;
-  m_jobs->removeJobById(jobToFgId);
   pid_t waitResult = waitpid(jobToFg->m_pid, nullptr, WUNTRACED); //wait for child to finish
   if(waitResult == -1){
     perror("smash error: waitpid failed");

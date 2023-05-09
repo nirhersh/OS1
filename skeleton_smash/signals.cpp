@@ -11,7 +11,11 @@ void ctrlZHandler(int sig_num) {
   SmallShell& smasholog = SmallShell::getInstance();
   if(smasholog.m_forgroundPid != -1){
     Command* cmd = smasholog.CreateCommand((smasholog.m_forgroundCmdLine).c_str());
-    smasholog.get_jobsList()->addJob(cmd, smasholog.m_forgroundPid, true);
+    if(smasholog.m_isForeGround){
+      smasholog.get_jobsList()->getJobById(smasholog.m_forgroundJobid)->m_entryTime = time(nullptr);
+    }else{
+      smasholog.get_jobsList()->addJob(cmd, smasholog.m_forgroundPid, true);
+    }
     kill(smasholog.m_forgroundPid, SIGSTOP);
     std::cout << "smash: process " << smasholog.m_forgroundPid << " was stopped" << std::endl;
   }

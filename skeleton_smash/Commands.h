@@ -231,7 +231,9 @@ class SmallShell {
   SmallShell();
   JobsList* m_jobsList;
  public:
+  bool m_isForeGround;
   int m_forgroundPid;
+  int m_forgroundJobid;
   std::map<pid_t, std::tuple<std::string, int, time_t>> m_childAlarm;
   std::string m_forgroundCmdLine;
   Command *CreateCommand(const char* cmd_line);
