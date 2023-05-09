@@ -13,6 +13,7 @@ void ctrlZHandler(int sig_num) {
     Command* cmd = smasholog.CreateCommand((smasholog.m_forgroundCmdLine).c_str());
     if(smasholog.m_isForeGround){
       smasholog.get_jobsList()->getJobById(smasholog.m_forgroundJobid)->m_entryTime = time(nullptr);
+      smasholog.get_jobsList()->getJobById(smasholog.m_forgroundJobid)->m_isStopped = true;
     }else{
       smasholog.get_jobsList()->addJob(cmd, smasholog.m_forgroundPid, true);
     }
