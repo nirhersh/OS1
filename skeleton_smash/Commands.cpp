@@ -243,7 +243,7 @@ void JobsList::printJobsList()
   for (JobEntry* job : m_jobsList)
   {
     time_t elapsed = difftime(time(nullptr), job->m_entryTime);
-    std::string outputStr = "[" + std::to_string(job->m_jobId) + "] " + job->m_commandName + " : " +
+    std::string outputStr = "[" + std::to_string(job->m_jobId) + "] " + job->m_commandLine + " : " +
                           std::to_string(job->m_pid) + " " + std::to_string(elapsed) + " secs ";
     if(job->m_isStopped){
       std::cout << outputStr + "(stopped)" << std::endl;
