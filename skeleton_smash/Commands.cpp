@@ -670,7 +670,7 @@ void QuitCommand::execute(){
       if(result == -1){
         perror("smash error: kill failed");
       }else{
-        std::cout << std::to_string(tempJob->m_jobId) + ": " + tempJob->m_commandLine << std::endl;
+        std::cout << std::to_string(tempJob->m_pid) + ": " + tempJob->m_commandLine << std::endl;
         m_jobs->removeJobById(tempJob->m_jobId);
       }
     }
