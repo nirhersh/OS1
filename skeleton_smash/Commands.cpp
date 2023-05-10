@@ -23,6 +23,8 @@ using namespace std;
 #define MAX_NUM_OF_PROCESSES 100
 #define BUFF_SIZE 100
 
+void splitString(const char* str1, char* str2, char* str3, const char* symbol);
+
 const std::string WHITESPACE = " \n\r\t\f\v";
 
 char* cutUpToChar(char* str, char ch);
