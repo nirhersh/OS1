@@ -122,8 +122,6 @@ SmallShell::~SmallShell() {
 Command * SmallShell::CreateCommand(const char* cmd_line) {
   string cmd_s = _trim(string(cmd_line));
   string firstWord = cmd_s.substr(0, cmd_s.find_first_of(" \n"));
-  SmallShell& smashboy = SmallShell::getInstance();
-  smashboy.m_isForeGround = true;
 
   //special commands:
   if (std::strchr(cmd_line, '>') != nullptr) {
@@ -424,6 +422,8 @@ Command::Command(const char* cmd_line)
     m_commandName = "";
   }
   m_commandLine = cmd_line;
+  SmallShell& smashdude = SmallShell::getInstance();
+  smashdude.m_isForeGround = false;
 }
 
 

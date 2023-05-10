@@ -10,11 +10,11 @@ void ctrlZHandler(int sig_num) {
   std::cout << "smash: got ctrl-Z" << std::endl;
   SmallShell& smasholog = SmallShell::getInstance();
   if(smasholog.m_forgroundPid != -1){
-    Command* cmd = smasholog.CreateCommand((smasholog.m_forgroundCmdLine).c_str());
     if(smasholog.m_isForeGround){
       smasholog.get_jobsList()->getJobById(smasholog.m_forgroundJobid)->m_entryTime = time(nullptr);
       smasholog.get_jobsList()->getJobById(smasholog.m_forgroundJobid)->m_isStopped = true;
     }else{
+      Command* cmd = smasholog.CreateCommand((smasholog.m_forgroundCmdLine).c_str());
       smasholog.get_jobsList()->addJob(cmd, smasholog.m_forgroundPid, true);
     }
     kill(smasholog.m_forgroundPid, SIGSTOP);
