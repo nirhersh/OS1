@@ -377,6 +377,9 @@ bool isNumber(char* str){
   if(str == nullptr){
     return false;
   }
+  if(*str == '-'){
+    str++;
+  }
   while(*str != '\0'){
     if(!std::isdigit(*str)){
       return false;
