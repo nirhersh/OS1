@@ -865,16 +865,34 @@ RedirectionCommand::RedirectionCommand(const char* cmd_line): Command(cmd_line)
   char* cmdLineCpy = new char[m_commandLine.size() + 1];
   strcpy(cmdLineCpy, m_commandLine.c_str());
   _removeBackgroundSign(cmdLineCpy);
-  m_argsNum = _parseCommandLine(cmdLineCpy, m_args);
-  m_outputPath = m_args[m_argsNum - 1];
-  if(std::strcmp(m_args[m_argsNum - 2], ">") == 0){
-    m_toOverride = true;
-  } else {
+  // m_argsNum = _parseCommandLine(cmdLineCpy, m_args);
+  // m_outputPath = m_args[m_argsNum - 1];
+  // if(std::strcmp(m_args[m_argsNum - 2], ">") == 0){
+  //   m_toOverride = true;
+  // } else {
+  //   m_toOverride = false;
+  //   assert(std::strcmp(m_args[m_argsNum - 2], ">>") == 0);
+  // }
+  // strcpy(m_innerCommand, cmd_line);
+  // cutUpToChar(m_innerCommand, '>');
+
+  char command[MAX_LINE_LEN];
+  char file[MAX_LINE_LEN];
+  char redirectSymbol[MAX_LINE_LEN];
+  if(std::strstr(cmdLineCpy, ">>") != nullptr){
+    strcpy(redirectSymbol, ">>");
     m_toOverride = false;
-    assert(std::strcmp(m_args[m_argsNum - 2], ">>") == 0);
+  }else{
+    strcpy(redirectSymbol, ">");
+    m_toOverride = true;
   }
-  strcpy(m_innerCommand, cmd_line);
-  cutUpToChar(m_innerCommand, '>');
+  splitString(cmdLineCpy, command, file, redirectSymbol);
+  m_argsNum = _parseCommandLine(command, m_args);
+  m_argsNum += _parseCommandLine(file, m_args);
+  strcpy
+
+
+
 }
 
 
