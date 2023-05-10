@@ -59,7 +59,7 @@ class RedirectionCommand : public Command {
   char* m_args[COMMAND_MAX_ARGS];
   bool m_toOverride;
   int m_argsNum;
-  std::string m_outputPath;
+  char* m_outputPath[COMMAND_MAX_ARGS];
  public:
   explicit RedirectionCommand(const char* cmd_line);
   virtual ~RedirectionCommand() {}

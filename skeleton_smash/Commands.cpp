@@ -888,11 +888,7 @@ RedirectionCommand::RedirectionCommand(const char* cmd_line): Command(cmd_line)
   }
   splitString(cmdLineCpy, command, file, redirectSymbol);
   m_argsNum = _parseCommandLine(command, m_args);
-  m_argsNum += _parseCommandLine(file, m_args);
-  strcpy
-
-
-
+  assert(_parseCommandLine(file, m_outputPath) == 1);
 }
 
 
@@ -926,7 +922,7 @@ void RedirectionCommand::execute()
   {
     if(m_toOverride){
       close(1);
-      int fd = open(m_outputPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      int fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
       if(fd == SYSCALL_FAILED){
         perror("smash error: open fails");
         return;
@@ -942,7 +938,7 @@ void RedirectionCommand::execute()
       return;
     } else {  // not fork and not override
       close(1);
-      int fd = open(m_outputPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+      int fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0644);
       if(fd == SYSCALL_FAILED){
         perror("smash error: open fails");
         return;
@@ -967,7 +963,7 @@ void RedirectionCommand::execute()
     if(pid == 0){
       setpgrp();
       close(1);
-      int fd = open(m_outputPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      int fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
       if(fd == SYSCALL_FAILED){
         perror("smash error: open fails");
         return;
@@ -978,7 +974,7 @@ void RedirectionCommand::execute()
   } else {
     if(pid == 0){
     close(1);
-    int fd = open(m_outputPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, 0644);
+    int fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0644);
     if(fd == SYSCALL_FAILED){
       perror(":smash error: open fails");
       return;
