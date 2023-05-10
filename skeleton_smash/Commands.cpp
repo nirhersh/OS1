@@ -888,7 +888,10 @@ RedirectionCommand::RedirectionCommand(const char* cmd_line): Command(cmd_line)
     strcpy(redirectSymbol, ">");
     m_toOverride = true;
   }
+  std::cout << "redirect symb: " << redirectSymbol << std::endl;
   splitString(cmdLineCpy, command, file, redirectSymbol);
+  strcpy(m_innerCommand, command);
+  std::cout << "command: " << command << ", file: " << file << std::endl;
   m_argsNum = _parseCommandLine(command, m_args);
   assert(_parseCommandLine(file, m_outputPath) == 1);
 }
@@ -1002,7 +1005,7 @@ void splitString(const char* str1, char* str2, char* str3, const char* symbol) {
         str2[delimiterPos] = '\0';
 
         // Copy the second part of the input string after the delimiter to str3
-        std::strcpy(str3, delimiter + 2);
+        std::strcpy(str3, delimiter + strlen(symbol));
     }
 }
 
