@@ -1,2 +1,2 @@
-smash pid is 8096
-smash pid is 19083
+showpid
+quit

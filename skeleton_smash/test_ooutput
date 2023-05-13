@@ -1,0 +1,8 @@
+smash> smash> smash> smash> smash> smash> smash> regularfile1’s type is "regular file" and takes up 8 bytes
+smash> regularfile2’s type is "regular file" and takes up 1 bytes
+smash> regularfile3’s type is "regular file" and takes up 44 bytes
+smash> folderfile’s type is "directory" and takes up 4096 bytes
+smash> /dev/null’s type is "character device" and takes up 0 bytes
+smash> /dev/fd’s type is "directory" and takes up 0 bytes
+smash> /dev/loop0’s type is "block device" and takes up 0 bytes
+smash> smash> smash> smash> smash> smash> smash> smash> smash> 

@@ -1,0 +1,22 @@
+mkdir getfiletypeTest
+cd getfiletypeTest
+echo content > regularfile1
+echo > regularfile2
+echo "https://www.youtube.com/watch?v=dQw4w9WgXcQ" > regularfile3
+mkdir folderfile
+getfiletype regularfile1
+getfiletype regularfile2
+getfiletype regularfile3
+getfiletype folderfile
+getfiletype /dev/null
+getfiletype /dev/fd
+getfiletype /dev/loop0
+getfiletype /run/acpid.socket
+getfiletype /run/systemd/initctl/fifo
+getfiletype regularfile1 invalid
+getfiletype regularfile1 invalid arguemnts
+getfiletype /noneExisitingPath
+getfiletype /noneExisitingPath invalid arguments
+cd ..
+rm -rf getfiletypeTest
+quit
