@@ -973,6 +973,9 @@ void RedirectionCommand::execute()
       }
       smashy.executeCommand(m_innerCommand);
       exit(0);
+    }else{
+      waitpid(pid, nullptr, 0);
+      return;
     }
   } else {
     if(pid == 0){
@@ -984,6 +987,9 @@ void RedirectionCommand::execute()
     }
     smashy.executeCommand(m_innerCommand);
     exit(0);
+    }else{
+      waitpid(pid, nullptr, 0);
+      return;
     }
   }
 }
@@ -1161,13 +1167,20 @@ void ChmodCommand::execute(){
   if(argsNum != 3 || !isNumber(args[1])){
     printInvalidArgumentsMessage("chmod");
   }
+  std::cout << "mod: " << args[1] << std::endl;
   mode_t mode = std::stoi(args[1], 0, 8); // need the mode number in octal base
   char currentWorkingDir[MAX_LINE_LEN] = {0};
   if(getcwd(currentWorkingDir, sizeof(currentWorkingDir)) == nullptr){
     perror("smash error: getcwd failed");
     return;
   }
-  std::string filePath =  std::string(currentWorkingDir) + "/" + args[2];
+  std::string filePath;
+  if(strstr(currentWorkingDir, args[2])!= nullptr){
+    filePath = args[2];
+  }else{
+    filePath =  std::string(currentWorkingDir) + "/" + args[2];
+  }
+  std::cout << "file path: " + filePath << std::endl;
   if(chmod(filePath.c_str(), mode) == SYSCALL_FAILED){
     perror("smash error: chmod failed");
     return;
