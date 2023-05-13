@@ -132,7 +132,7 @@ Command * SmallShell::CreateCommand(const char* cmd_line) {
   if (std::strchr(cmd_line, '|') != nullptr) {
     return new PipeCommand(cmd_line);
   }
-  else if (firstWord.compare("getfileinfo") == 0) {
+  else if (firstWord.compare("getfiletype") == 0) {
     return new GetFileTypeCommand(cmd_line);
   }
   else if(firstWord.compare("setcore") == 0){
@@ -893,8 +893,6 @@ RedirectionCommand::RedirectionCommand(const char* cmd_line): Command(cmd_line)
   m_argsNum = _parseCommandLine(command, m_args);
   assert(_parseCommandLine(file, m_outputPath) == 1);
 }
-
-
 /*
 gets a string and a char
 return a substr, from the original cut up to the first appearance of the char
@@ -923,74 +921,50 @@ void RedirectionCommand::execute()
   int stdoutDup = dup(1);
   if (is_builtIn_command(m_args[0]))
   {
+    close(1);
+    int fd;
     if(m_toOverride){
-      close(1);
-      int fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-      if(fd == SYSCALL_FAILED){
-        perror("smash error: open fails");
-        return;
-      }
-      smashy.executeCommand(m_innerCommand);
-      close(1);
-      int fd1 = dup(stdoutDup);
-      close(stdoutDup);
-      if (fd1 == -1){ 
-        perror("smash error: open fails");
-        return;
-      }
-      return;
-    } else {  // not fork and not override
-      close(1);
-      int fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0644);
-      if(fd == SYSCALL_FAILED){
-        perror("smash error: open fails");
-        return;
-      }
-      smashy.executeCommand(m_innerCommand);
-      close(1);
-      int fd1 = dup(stdoutDup);
-      close(stdoutDup);
-      if (fd1 == -1){ 
-        perror("smash error: open fails");
-      }
+      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    } else {
+      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0644);  
+    }
+    if(fd == SYSCALL_FAILED){
+      perror("smash error: open fails");
       return;
     }
+    smashy.executeCommand(m_innerCommand);
+    close(1);
+    int fd1 = dup(stdoutDup);
+    close(stdoutDup);
+    if (fd1 == -1){ 
+      perror("smash error: open fails");
+      return;
+    }
+    return;
   }
   pid_t pid = fork();
   if(pid == SYSCALL_FAILED){
       perror("smash error: pid failed");
       return;
   }
-  if(m_toOverride)
-  {
-    if(pid == 0){
-      setpgrp();
-      close(1);
-      int fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-      if(fd == SYSCALL_FAILED){
-        perror("smash error: open fails");
-        return;
-      }
-      smashy.executeCommand(m_innerCommand);
-      exit(0);
-    }else{
-      waitpid(pid, nullptr, 0);
-      return;
-    }
-  } else {
-    if(pid == 0){
+  if(pid == 0){
+    setpgrp();
     close(1);
-    int fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0644);
+    int fd;
+    if(m_toOverride){
+      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    } else {
+      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0644);
+    }
     if(fd == SYSCALL_FAILED){
-      perror(":smash error: open fails");
+      perror("smash error: open fails");
       return;
     }
     smashy.executeCommand(m_innerCommand);
     exit(0);
-    }else{
-      waitpid(pid, nullptr, 0);
-      return;
-    }
+  }else{
+    waitpid(pid, nullptr, 0);
+    return;
   }
 }
 
