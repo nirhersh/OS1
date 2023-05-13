@@ -469,7 +469,7 @@ void ChangeDirCommand::execute()
   char* args[COMMAND_MAX_ARGS] = {nullptr};
   int argsNum = _parseCommandLine(m_cmdLine, args);
   if (argsNum > 2){
-    std::cerr << "smash error: cd: too many agruments" << std::endl;
+    std::cerr << "smash error: cd: too many arguments" << std::endl;
     return;
   }
   else if(argsNum < 2){
@@ -1166,8 +1166,12 @@ void ChmodCommand::execute(){
   int argsNum = _parseCommandLine(m_cmdLine, args);
   if(argsNum != 3 || !isNumber(args[1])){
     printInvalidArgumentsMessage("chmod");
+    return;
   }
-  std::cout << "mod: " << args[1] << std::endl;
+  if(std::stoi(args[1]) > 9999){
+    printInvalidArgumentsMessage("chmod");
+    return;
+  }
   mode_t mode = std::stoi(args[1], 0, 8); // need the mode number in octal base
   char currentWorkingDir[MAX_LINE_LEN] = {0};
   if(getcwd(currentWorkingDir, sizeof(currentWorkingDir)) == nullptr){
@@ -1180,7 +1184,6 @@ void ChmodCommand::execute(){
   }else{
     filePath =  std::string(currentWorkingDir) + "/" + args[2];
   }
-  std::cout << "file path: " + filePath << std::endl;
   if(chmod(filePath.c_str(), mode) == SYSCALL_FAILED){
     perror("smash error: chmod failed");
     return;
