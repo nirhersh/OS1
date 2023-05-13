@@ -1175,7 +1175,7 @@ void ChmodCommand::execute(){
     return;
   }
   std::string filePath;
-  if(strstr(currentWorkingDir, args[2])!= nullptr){
+  if(strstr(args[2], currentWorkingDir)!= nullptr){
     filePath = args[2];
   }else{
     filePath =  std::string(currentWorkingDir) + "/" + args[2];
