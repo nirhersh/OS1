@@ -1061,36 +1061,37 @@ GetFileTypeCommand::GetFileTypeCommand(const char* cmd_line): BuiltInCommand(cmd
 void GetFileTypeCommand::execute()
 {
   if(m_argsNum != 2){
-    perror("smash error: invalid arguments");
+    std::cerr << "smash error: getfiletype: invalid arguments" << std::endl;
     return;
+  }else{
+    struct stat st;
+    if (stat(m_args[FIRST_ARGUMENT], &st) == -1) {
+      perror("smash error: lstat failed");
+      return;
+    }
+    std::string type;
+    std::string size = to_string(st.st_size);
+    std::string path = m_args[FIRST_ARGUMENT];
+    mode_t mode = st.st_mode;
+    if (S_ISREG(mode)) {
+      type =  "regular file";
+    } else if (S_ISDIR(mode)) {
+      type = "directory";
+    } else if (S_ISLNK(mode)) {
+      type = "symbolic link";
+    } else if (S_ISFIFO(mode)) {
+      type = "FIFO";
+    } else if (S_ISSOCK(mode)) {
+      type = "socket";
+    } else if (S_ISCHR(mode)) {
+      type = "character device";
+    } else if (S_ISBLK(mode)) {
+      type = "block device";
+    } else {
+      type = "unknown";
+    }
+    std::cout << path + "’s type is \"" + type + "\" and takes up " + size + " bytes" << std::endl;
   }
-  struct stat st;
-  if (stat(m_args[FIRST_ARGUMENT], &st) == -1 || m_argsNum != 2) {
-    perror("smash error: lstat failed");
-    return;
-  }
-  std::string type;
-  std::string size = to_string(st.st_size);
-  std::string path = m_args[FIRST_ARGUMENT];
-  mode_t mode = st.st_mode;
-  if (S_ISREG(mode)) {
-    type =  "regular file";
-  } else if (S_ISDIR(mode)) {
-    type = "directory";
-  } else if (S_ISLNK(mode)) {
-    type = "symbolic link";
-  } else if (S_ISFIFO(mode)) {
-    type = "FIFO";
-  } else if (S_ISSOCK(mode)) {
-    type = "socket";
-  } else if (S_ISCHR(mode)) {
-    type = "character device";
-  } else if (S_ISBLK(mode)) {
-    type = "block device";
-  } else {
-    type = "unknown";
-  }
-  std::cout << path + "’s type is \"" + type + "\" and takes up " + size + " bytes" << std::endl;
 }
 
 
