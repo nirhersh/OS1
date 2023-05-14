@@ -924,12 +924,18 @@ void RedirectionCommand::execute()
     close(1);
     int fd;
     if(m_toOverride){
-      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
     } else {
-      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0644);  
+      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0666);  
     }
     if(fd == SYSCALL_FAILED){
       perror("smash error: open fails");
+      int fd1 = dup(stdoutDup);
+      close(stdoutDup);
+      if (fd1 == -1){ 
+        perror("smash error: dup fails");
+        return;
+    }
       return;
     }
     smashy.executeCommand(m_innerCommand);
@@ -937,14 +943,14 @@ void RedirectionCommand::execute()
     int fd1 = dup(stdoutDup);
     close(stdoutDup);
     if (fd1 == -1){ 
-      perror("smash error: open fails");
+      perror("smash error: dup fails");
       return;
     }
     return;
-  }
+  } //external
   pid_t pid = fork();
   if(pid == SYSCALL_FAILED){
-      perror("smash error: pid failed");
+      perror("smash error: fork failed");
       return;
   }
   if(pid == 0){
@@ -952,9 +958,9 @@ void RedirectionCommand::execute()
     close(1);
     int fd;
     if(m_toOverride){
-      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
     } else {
-      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0644);
+      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0666);
     }
     if(fd == SYSCALL_FAILED){
       perror("smash error: open fails");
