@@ -905,73 +905,36 @@ char* cutUpToChar(char* str, char ch) {
     return str;
 }
 
-bool is_builtIn_command(char* command)
-{
-  std::string commandDup = command;
-  if (commandDup == "showpid" || commandDup == "chprompt" || commandDup == "pwd" || commandDup == "cd" ||
-       commandDup == "jobs" || commandDup == "fg" || commandDup == "bg" || commandDup == "quit" || commandDup == "kill"){
-    return true;
-  }
-  return false;
-}
-
 void RedirectionCommand::execute()
 {
   SmallShell& smashy = SmallShell::getInstance();
   int stdoutDup = dup(1);
-  if (is_builtIn_command(m_args[0]))
-  {
-    close(1);
-    int fd;
-    if(m_toOverride){
-      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    } else {
-      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0666);  
-    }
-    if(fd == SYSCALL_FAILED){
-      perror("smash error: open fails");
-      int fd1 = dup(stdoutDup);
-      close(stdoutDup);
-      if (fd1 == -1){ 
-        perror("smash error: dup fails");
-        return;
-    }
-      return;
-    }
-    smashy.executeCommand(m_innerCommand);
-    close(1);
+  close(1);
+  int fd;
+  if(m_toOverride){
+    fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
+  } else {
+    fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0666);  
+  }
+  if(fd == SYSCALL_FAILED){
+    perror("smash error: open fails");
     int fd1 = dup(stdoutDup);
     close(stdoutDup);
     if (fd1 == -1){ 
       perror("smash error: dup fails");
       return;
-    }
-    return;
-  } //external
-  pid_t pid = fork();
-  if(pid == SYSCALL_FAILED){
-      perror("smash error: fork failed");
-      return;
   }
-  if(pid == 0){
-    setpgrp();
-    close(1);
-    int fd;
-    if(m_toOverride){
-      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    } else {
-      fd = open(m_outputPath[0], O_WRONLY | O_CREAT | O_APPEND, 0666);
-    }
-    if(fd == SYSCALL_FAILED){
-      perror("smash error: open fails");
-      return;
-    }
-    smashy.executeCommand(m_innerCommand);
-    exit(0);
-  }else{
-    waitpid(pid, nullptr, 0);
     return;
   }
+  smashy.executeCommand(m_innerCommand);
+  close(1);
+  int fd1 = dup(stdoutDup);
+  close(stdoutDup);
+  if (fd1 == -1){ 
+    perror("smash error: dup fails");
+    return;
+  }
+  return;
 }
 
 void splitString(const char* str1, char* str2, char* str3, const char* symbol) {
