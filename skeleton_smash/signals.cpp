@@ -1,5 +1,6 @@
 #include <iostream>
 #include <signal.h>
+#include <unistd.h>
 #include <sys/wait.h>
 #include "signals.h"
 #include "Commands.h"
@@ -36,30 +37,33 @@ void ctrlCHandler(int sig_num) {
 }
 
 void alarmHandler(int sig_num) {
-  SmallShell& smashichan = SmallShell::getInstance();
-  for(auto& pair : smashichan.m_childAlarm){
-    time_t diff = difftime(time(nullptr), std::get<2>(pair.second));
-    //std::cout << "diff: " << diff << "pid: " << pair.first << std::endl;
-    if(diff >= std::get<1>(pair.second)){
-      std::cout << "smash: got an alarm" << std::endl;
-      std::cout << "smash: " + std::get<0>(pair.second) + " timed out!" << std::endl;
-      int result = kill(pair.first, SIGKILL);
-      if(result == -1){
-        perror("smash error: kill failed");
-        return;
-      }else{
-        smashichan.m_childAlarm.erase(pair.first);
-        break;
+  SmallShell& smashulash = SmallShell::getInstance();
+  int index = -1;
+  for(Alarm& alrm : smashulash.m_timeoutCommands)
+  {
+    index++;
+    if(alrm.timeUntilAlarm() <= 0){
+      if(waitpid(alrm.m_pid, nullptr, WNOHANG) == 0){
+        kill(alrm.m_pid, 9);
+        smashulash.get_jobsList()->removeFinishedJobs();
+        std::cout << "smash: got an alarm" << std::endl;
+        std::cout << "smash: " + alrm.m_cmdLine + " timed out!" << std::endl;
+
       }
-    }
-    for(auto& pair : smashichan.m_childAlarm){
-      int status;
-      pid_t result = waitpid(pair.first, &status, WNOHANG | WUNTRACED);
-      if(WIFEXITED(status) || WIFSIGNALED(status)){ //process finished
-          smashichan.m_childAlarm.erase(pair.first);
-          break;
-      }
+      smashulash.m_timeoutCommands.erase(smashulash.m_timeoutCommands.begin() + index);
+      break;
     }
   }
+  if(smashulash.m_timeoutCommands.empty()){
+      return;
+    }
+    time_t min_diff = smashulash.m_timeoutCommands.front().timeUntilAlarm();
+    for(Alarm& alrm : smashulash.m_timeoutCommands)
+    {
+      if(alrm.timeUntilAlarm() < min_diff){
+        min_diff = alrm.timeUntilAlarm();
+      }
+    }
+    alarm(min_diff);
 }
 

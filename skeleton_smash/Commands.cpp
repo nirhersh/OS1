@@ -415,6 +415,22 @@ void trimDash(char* str){
     std::strcpy(str, s.c_str());
 }
 
+void pushNewAlarm(pid_t pid, int alrm, std::string cmd){
+  SmallShell& smashLord = SmallShell::getInstance();
+  Alarm newAlarm(pid, time(nullptr), alrm, cmd);
+  bool isClosest = true;
+  for(Alarm& alrm : smashLord.m_timeoutCommands){
+    if(alrm.timeUntilAlarm() < newAlarm.timeUntilAlarm()){
+      isClosest = false;
+      break;
+    }
+  }
+  if(isClosest){
+    alarm(newAlarm.timeUntilAlarm());
+  }
+  smashLord.m_timeoutCommands.push_back(newAlarm);
+}
+
 //******************************************* BUILT-IN COMMANDS IMPLEMENTATION **************************************
 //Command::~Command() {}
 Command::Command(const char* cmd_line)
@@ -785,8 +801,7 @@ void ExternalCommand::execute()
       } else { //parent proccess
         m_jobs->addJob(this, pid);
         if(m_timeout != -1){
-          smashman.m_childAlarm[pid] = std::make_tuple(m_commandLine, m_timeout, time(nullptr));
-          alarm(m_timeout);
+          pushNewAlarm(pid, m_timeout, m_commandLine);
         }
         return;
       }
@@ -801,16 +816,15 @@ void ExternalCommand::execute()
         }
         exit(0);
       } else { //parent proccess
-        if(m_timeout != -1){
-          smashman.m_childAlarm[pid] = std::make_tuple(m_commandLine, m_timeout, time(nullptr));
-          alarm(m_timeout);
-        }
-        if(waitpid(pid, nullptr, WUNTRACED) == SYSCALL_FAILED){
-          perror("smash error: waitpid failed");  
-        }
-        smashman.m_forgroundPid = -1;
-        smashman.m_forgroundCmdLine = "";
-        return;
+          if(m_timeout != -1){
+            pushNewAlarm(pid, m_timeout, m_commandLine);
+          }
+          if(waitpid(pid, nullptr, WUNTRACED) == SYSCALL_FAILED){
+            perror("smash error: waitpid failed");  
+          }
+          smashman.m_forgroundPid = -1;
+          smashman.m_forgroundCmdLine = "";
+          return;
       }
     }
   } else { //in case of complex
@@ -828,8 +842,7 @@ void ExternalCommand::execute()
       } else { //parent proccess
         m_jobs->addJob(this, pid);
         if(m_timeout != -1){
-          smashman.m_childAlarm[pid] = std::make_tuple(m_commandLine, m_timeout, time(nullptr));
-          alarm(m_timeout);
+            pushNewAlarm(pid, m_timeout, m_commandLine);
         }
         return;
       }
@@ -844,16 +857,15 @@ void ExternalCommand::execute()
         }
         exit(0);
       } else { //parent proccess
-        if(m_timeout != -1){
-          smashman.m_childAlarm[pid] = std::make_tuple(m_commandLine, m_timeout, time(nullptr));
-          alarm(m_timeout);
-        }
-        if(waitpid(pid, nullptr, WUNTRACED) == SYSCALL_FAILED){
-          perror("smash error: waitpid failed");  
-        }
-        smashman.m_forgroundPid = -1;
-        smashman.m_forgroundCmdLine = "";
-        return;
+          if(m_timeout != -1){
+            pushNewAlarm(pid, m_timeout, m_commandLine);
+          }
+          if(waitpid(pid, nullptr, WUNTRACED) == SYSCALL_FAILED){
+            perror("smash error: waitpid failed");  
+          }
+          smashman.m_forgroundPid = -1;
+          smashman.m_forgroundCmdLine = "";
+          return;
       }
     }
   }

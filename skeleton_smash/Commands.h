@@ -223,6 +223,19 @@ public:
   void execute() override;
 };
 
+struct Alarm{
+public:
+  pid_t m_pid;
+  time_t m_creationTime;
+  int m_alarm;
+  std::string m_cmdLine;
+  time_t timeUntilAlarm(){
+    return difftime(m_alarm, time(nullptr)-m_creationTime);
+  }
+  Alarm(pid_t pid, time_t creationTime, int alrm, std::string cmd) : m_pid(pid),
+   m_creationTime(creationTime), m_alarm(alrm), m_cmdLine(cmd){}  
+};
+
 class SmallShell {
  private:
   // TODO: Add your data members
@@ -231,10 +244,11 @@ class SmallShell {
   SmallShell();
   JobsList* m_jobsList;
  public:
+  std::vector<Alarm> m_timeoutCommands;
   bool m_isForeGround;
   int m_forgroundPid;
   int m_forgroundJobid;
-  std::map<pid_t, std::tuple<std::string, int, time_t>> m_childAlarm;
+  
   std::string m_forgroundCmdLine;
   Command *CreateCommand(const char* cmd_line);
   SmallShell(SmallShell const&)      = delete; // disable copy ctor
@@ -277,5 +291,7 @@ bool isNumber(char* str);
 bool isNumberWithDash(char* str);
 
 void trimDash(char* str);
+
+void pushNewAlarm(pid_t pid, int alrm, std::string cmd);
 
 #endif //SMASH_COMMAND_H_
