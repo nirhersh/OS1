@@ -772,7 +772,8 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
   int numArgs = _parseCommandLine(commandDup, tempArgs);
   if(strcmp(tempArgs[0], "timeout") == 0){
     if(!isNumber(tempArgs[FIRST_ARGUMENT])){
-      assert(false); 
+      printInvalidArgumentsMessage("timeout");
+      return; 
     } else {
       m_timeout = std::stoi(tempArgs[FIRST_ARGUMENT]);
       for(int i = 2; i < numArgs; i++)
