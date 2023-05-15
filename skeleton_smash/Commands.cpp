@@ -431,6 +431,10 @@ void pushNewAlarm(pid_t pid, int alrm, std::string cmd){
   smashLord.m_timeoutCommands.push_back(newAlarm);
 }
 
+bool isBuiltinCommand(std::string command){
+  if(command == "")
+}
+
 //******************************************* BUILT-IN COMMANDS IMPLEMENTATION **************************************
 //Command::~Command() {}
 Command::Command(const char* cmd_line)
@@ -785,6 +789,7 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
   else {
     _parseCommandLine(commandDup, m_command);
   }
+  if()
 }
 
 void ExternalCommand::execute()
