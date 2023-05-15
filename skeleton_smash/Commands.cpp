@@ -767,6 +767,7 @@ bool is_complex_external_command(const char* cmd_line)
 }
 ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(cmd_line)
 {
+  m_exec = true;
   m_timeout = -1;
   m_jobs = jobs;
   m_isBackground = _isBackgroundCommand(cmd_line);
@@ -780,11 +781,13 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
   int numArgs = _parseCommandLine(commandDup, tempArgs);
   if(strcmp(tempArgs[0], "timeout") == 0){
     if(!isNumber(tempArgs[FIRST_ARGUMENT]) || numArgs == 2){
+      m_exec = false;
       printInvalidArgumentsMessage("timeout");
       return; 
     } else {
       m_timeout = std::stoi(tempArgs[FIRST_ARGUMENT]);
       if(m_timeout < 0){
+        m_exec = false;
         printInvalidArgumentsMessage("timeout");
         return; 
       }
@@ -804,6 +807,9 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
 
 void ExternalCommand::execute()
 {
+  if(!m_exec){
+    return;
+  }
   SmallShell& smashman = SmallShell::getInstance();
   if(m_timeout != -1 && isBuiltinCommand(m_command[0])){ // is builtin command, ugly workaround
     pushNewAlarm(-1, m_timeout, "");

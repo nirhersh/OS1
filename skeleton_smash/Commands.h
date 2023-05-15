@@ -38,6 +38,7 @@ class ExternalCommand : public Command {
   JobsList* m_jobs;
   int m_timeout;
   char m_command_without_timeout[COMMAND_ARGS_MAX_LENGTH];
+  bool m_exec;
  public:
   char* m_command[COMMAND_MAX_ARGS];
   ExternalCommand(const char* cmd_line, JobsList* jobs);
