@@ -779,7 +779,7 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
   char* tempArgs[MAX_ARGS] = {nullptr};
   int numArgs = _parseCommandLine(commandDup, tempArgs);
   if(strcmp(tempArgs[0], "timeout") == 0){
-    if(!isNumber(tempArgs[FIRST_ARGUMENT])){
+    if(!isNumber(tempArgs[FIRST_ARGUMENT]) || numArgs == 2){
       printInvalidArgumentsMessage("timeout");
       return; 
     } else {
