@@ -779,6 +779,7 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
   }
   char* tempArgs[MAX_ARGS] = {nullptr};
   int numArgs = _parseCommandLine(commandDup, tempArgs);
+  m_command[0] = nullptr;
   if(strcmp(tempArgs[0], "timeout") == 0){
     if(!isNumber(tempArgs[FIRST_ARGUMENT])){
       m_exec = false;
@@ -814,6 +815,9 @@ void ExternalCommand::execute()
     return;
   }
   SmallShell& smashman = SmallShell::getInstance();
+  if(m_command[0] == nullptr){
+    m_command[0] = "pwd";
+  }
   if(m_timeout != -1 && isBuiltinCommand(m_command[0])){ // is builtin command, ugly workaround
     pushNewAlarm(-1, m_timeout, "");
     if(m_command_without_timeout != nullptr){
