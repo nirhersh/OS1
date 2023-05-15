@@ -780,7 +780,7 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
   char* tempArgs[MAX_ARGS] = {nullptr};
   int numArgs = _parseCommandLine(commandDup, tempArgs);
   if(strcmp(tempArgs[0], "timeout") == 0){
-    if(!isNumber(tempArgs[FIRST_ARGUMENT]) || numArgs == 2){
+    if(!isNumber(tempArgs[FIRST_ARGUMENT])){
       m_exec = false;
       printInvalidArgumentsMessage("timeout");
       return; 
@@ -790,6 +790,9 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
         m_exec = false;
         printInvalidArgumentsMessage("timeout");
         return; 
+      }
+      if(numArgs == 2){
+        m_command_without_timeout == nullptr;
       }
       for(int i = 2; i < numArgs; i++)
       {
@@ -813,7 +816,9 @@ void ExternalCommand::execute()
   SmallShell& smashman = SmallShell::getInstance();
   if(m_timeout != -1 && isBuiltinCommand(m_command[0])){ // is builtin command, ugly workaround
     pushNewAlarm(-1, m_timeout, "");
-    smashman.executeCommand(m_command_without_timeout);
+    if(m_command_without_timeout != nullptr){
+      smashman.executeCommand(m_command_without_timeout);
+    }
     return;
   }
   if(!m_isComplex){
