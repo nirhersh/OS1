@@ -432,7 +432,11 @@ void pushNewAlarm(pid_t pid, int alrm, std::string cmd){
 }
 
 bool isBuiltinCommand(std::string command){
-  if(command == "")
+  if(command == "showpid" || command == "pwd" || command == "cd" || command == "chprompt" ||
+   command == "jobs" || command == "fg" || command == "bg" || command == "quit" || command == "kill"){
+    return true;
+   }
+  return false;
 }
 
 //******************************************* BUILT-IN COMMANDS IMPLEMENTATION **************************************
@@ -780,21 +784,31 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
       return; 
     } else {
       m_timeout = std::stoi(tempArgs[FIRST_ARGUMENT]);
+      if(m_timeout < 0){
+        printInvalidArgumentsMessage("timeout");
+        return; 
+      }
       for(int i = 2; i < numArgs; i++)
       {
         m_command[i - 2] = tempArgs[i];
+      }
+      for(int i=0; i<numArgs; i++){
+        strcat(m_command_without_timeout, m_command[i]);
       }
     }
   }
   else {
     _parseCommandLine(commandDup, m_command);
   }
-  if()
 }
 
 void ExternalCommand::execute()
 {
   SmallShell& smashman = SmallShell::getInstance();
+  if(m_timeout != -1 && isBuiltinCommand(m_command[0])){ // is builtin command, ugly workaround
+    pushNewAlarm(-1, m_timeout, "");
+    smashman.executeCommand(m_command_without_timeout);
+  }
   if(!m_isComplex){
     if(m_isBackground){ //in case of background
       pid_t pid = fork();
@@ -1052,7 +1066,7 @@ void GetFileTypeCommand::execute()
     return;
   }else{
     struct stat st;
-    if (stat(m_args[FIRST_ARGUMENT], &st) == -1) {
+    if (lstat(m_args[FIRST_ARGUMENT], &st) == -1) {
       perror("smash error: lstat failed");
       return;
     }

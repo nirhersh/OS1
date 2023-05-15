@@ -44,11 +44,10 @@ void alarmHandler(int sig_num) {
     index++;
     if(alrm.timeUntilAlarm() <= 0){
       std::cout << "smash: got an alarm" << std::endl;
-      if(waitpid(alrm.m_pid, nullptr, WNOHANG) == 0){
+      if(alrm.m_pid != -1 && waitpid(alrm.m_pid, nullptr, WNOHANG) == 0){
         kill(alrm.m_pid, 9);
         smashulash.get_jobsList()->removeFinishedJobs();
         std::cout << "smash: " + alrm.m_cmdLine + " timed out!" << std::endl;
-
       }
       smashulash.m_timeoutCommands.erase(smashulash.m_timeoutCommands.begin() + index);
       break;
