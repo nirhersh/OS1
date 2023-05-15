@@ -792,7 +792,7 @@ ExternalCommand::ExternalCommand(const char* cmd_line, JobsList* jobs): Command(
       {
         m_command[i - 2] = tempArgs[i];
       }
-      for(int i=0; i<numArgs; i++){
+      for(int i=0; i<numArgs - 2; i++){
         strcat(m_command_without_timeout, m_command[i]);
       }
     }
@@ -808,6 +808,7 @@ void ExternalCommand::execute()
   if(m_timeout != -1 && isBuiltinCommand(m_command[0])){ // is builtin command, ugly workaround
     pushNewAlarm(-1, m_timeout, "");
     smashman.executeCommand(m_command_without_timeout);
+    return;
   }
   if(!m_isComplex){
     if(m_isBackground){ //in case of background
